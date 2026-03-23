@@ -3,6 +3,7 @@ using System.CommandLine.Invocation;
 using System.Text.Json;
 using System.Xml.Linq;
 using NugetDocs.Cli.Services;
+using static NugetDocs.Cli.Services.NuGetMetadataService;
 
 namespace NugetDocs.Cli.Commands;
 
@@ -50,6 +51,10 @@ internal sealed class InfoCommandAction(InfoCommand command) : AsynchronousComma
             var dependencies = metadata.Element(ns + "dependencies");
             var depData = CollectDependencies(dependencies, ns);
 
+            // Fetch deprecation/vulnerability metadata
+            var versionMeta = await NuGetMetadataService.GetVersionMetadataAsync(
+                package, resolved.Version, cancellationToken).ConfigureAwait(false);
+
             if (jsonOutput)
             {
                 var json = new
@@ -64,6 +69,14 @@ internal sealed class InfoCommandAction(InfoCommand command) : AsynchronousComma
                     tags = GetValue(metadata, ns, "tags"),
                     frameworks = tfms,
                     dependencies = depData,
+                    deprecated = versionMeta?.IsDeprecated ?? false,
+                    deprecationReasons = versionMeta?.DeprecationReasons,
+                    alternatePackage = versionMeta?.AlternatePackageId,
+                    vulnerabilities = versionMeta?.Vulnerabilities?.Select(v => new
+                    {
+                        severity = v.Severity,
+                        advisoryUrl = v.AdvisoryUrl,
+                    }),
                 };
                 Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
             }
@@ -113,6 +126,36 @@ internal sealed class InfoCommandAction(InfoCommand command) : AsynchronousComma
                         foreach (var dep in deps)
                         {
                             Console.WriteLine($"    {dep.Id} {dep.Version}");
+                        }
+                    }
+                }
+
+                if (versionMeta is not null)
+                {
+                    Console.WriteLine();
+                    if (versionMeta.IsDeprecated)
+                    {
+                        var reasons = versionMeta.DeprecationReasons is { Count: > 0 }
+                            ? string.Join(", ", versionMeta.DeprecationReasons)
+                            : "deprecated";
+                        Console.WriteLine($"DEPRECATED: {reasons}");
+                        if (versionMeta.AlternatePackageId is not null)
+                        {
+                            Console.WriteLine($"  Alternate: {versionMeta.AlternatePackageId}");
+                        }
+                        if (versionMeta.DeprecationMessage is not null)
+                        {
+                            Console.WriteLine($"  Message: {versionMeta.DeprecationMessage}");
+                        }
+                    }
+
+                    if (versionMeta.HasVulnerabilities && versionMeta.Vulnerabilities is not null)
+                    {
+                        Console.WriteLine("VULNERABILITIES:");
+                        foreach (var vuln in versionMeta.Vulnerabilities)
+                        {
+                            var url = vuln.AdvisoryUrl is not null ? $" — {vuln.AdvisoryUrl}" : "";
+                            Console.WriteLine($"  {vuln.Severity}{url}");
                         }
                     }
                 }

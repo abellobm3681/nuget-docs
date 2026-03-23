@@ -35,6 +35,11 @@ internal sealed class VersionsCommand : Command
         Description = "Output only the count of matching versions",
         DefaultValueFactory = _ => false,
     };
+    public Option<bool> DeprecatedOption { get; } = new("--deprecated")
+    {
+        Description = "Show deprecation and vulnerability info for each version",
+        DefaultValueFactory = _ => false,
+    };
     public Option<string?> OutputOption { get; } = CommonOptions.Output;
     public Option<bool> JsonOption { get; } = CommonOptions.Json;
 
@@ -47,6 +52,7 @@ internal sealed class VersionsCommand : Command
         Options.Add(SinceOption);
         Options.Add(LimitOption);
         Options.Add(CountOption);
+        Options.Add(DeprecatedOption);
         Options.Add(OutputOption);
         Options.Add(JsonOption);
 

@@ -17,6 +17,11 @@ internal sealed class ListCommand : Command
         Description = "Filter types by namespace prefix",
         DefaultValueFactory = _ => null,
     };
+    public Option<string?> FormatOption { get; } = new("--format")
+    {
+        Description = "Output format: grouped (default), table, or csv",
+        DefaultValueFactory = _ => null,
+    };
     public Option<string?> OutputOption { get; } = CommonOptions.Output;
     public Option<bool> JsonOption { get; } = CommonOptions.Json;
 
@@ -27,6 +32,7 @@ internal sealed class ListCommand : Command
         Options.Add(FrameworkOption);
         Options.Add(AllOption);
         Options.Add(NamespaceOption);
+        Options.Add(FormatOption);
         Options.Add(OutputOption);
         Options.Add(JsonOption);
 

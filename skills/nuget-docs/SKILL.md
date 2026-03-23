@@ -37,10 +37,10 @@ Use `nuget-docs` when you need to:
 ### List all public types
 
 ```bash
-nuget-docs list <Package> [--version <ver>] [--framework <tfm>] [--all] [--namespace <prefix>] [--json] [--output json]
+nuget-docs list <Package> [--version <ver>] [--framework <tfm>] [--all] [--namespace <prefix>] [--format table|csv] [--json] [--output json]
 ```
 
-Shows all public types grouped by kind (Interfaces, Classes, Structs, Enums, Delegates) with one-line XML doc summaries. Use `--all` (`-a`) to include internal types. Use `--namespace` (`-n`) to filter by namespace prefix.
+Shows all public types grouped by kind (Interfaces, Classes, Structs, Enums, Delegates) with one-line XML doc summaries. Use `--all` (`-a`) to include internal types. Use `--namespace` (`-n`) to filter by namespace prefix. Use `--format table` for aligned columns or `--format csv` for CSV output.
 
 ### Show a specific type
 
@@ -85,10 +85,10 @@ Shows the dependency tree of a package with tree-style output. Use `--depth` (`-
 ### List available versions
 
 ```bash
-nuget-docs versions <Package> [--stable] [--prerelease] [--latest] [--since <ver>] [--count] [--limit <n>] [--json] [--output json]
+nuget-docs versions <Package> [--stable] [--prerelease] [--latest] [--since <ver>] [--count] [--deprecated] [--limit <n>] [--json] [--output json]
 ```
 
-Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to show only stable versions. Use `--prerelease` (`-p`) to show only prerelease versions. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--since` to show only versions newer than the specified version. Use `--count` (`-c`) to output only the count of matching versions (useful for CI). Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
+Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to show only stable versions. Use `--prerelease` (`-p`) to show only prerelease versions. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--since` to show only versions newer than the specified version. Use `--count` (`-c`) to output only the count of matching versions (useful for CI). Use `--deprecated` to show deprecation and vulnerability info for each version. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
 
 ## Efficient Usage Patterns
 
@@ -117,7 +117,9 @@ Lists all available versions of a package from NuGet.org, newest first. Use `--s
 - **Ignore doc changes**: Use `--ignore-docs` with `diff` to skip XML doc comment changes — reduces noise when only code changes matter
 - **CI integration**: `diff` returns exit code 2 when breaking changes are detected (0 = clean, 1 = error)
 - **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
-- **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--prerelease` for prerelease only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version (supports `latest`, `latest-stable`, `latest-prerelease` keywords); `--count` for just the number; useful before `diff`
+- **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--prerelease` for prerelease only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version (supports `latest`, `latest-stable`, `latest-prerelease` keywords); `--count` for just the number; `--deprecated` to show deprecation/vulnerability markers; useful before `diff`
+- **Deprecation check**: Use `--deprecated` with `versions` to see which versions are deprecated or have known vulnerabilities. The `info` command always shows deprecation status automatically
+- **Alternative output formats**: Use `--format table` with `list` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
 - **JSON output**: Use `--json` (`-j`) or `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down
@@ -238,6 +240,30 @@ nuget-docs diff MyPackage --from 1.0.0 --to 2.0.0 --type-only || echo "Breaking 
 
 # Get structured diff output
 nuget-docs diff Newtonsoft.Json --from 13.0.3 --to 13.0.4 --output json
+```
+
+### Alternative output formats
+
+```bash
+# Table format with aligned columns
+nuget-docs list Newtonsoft.Json --format table
+
+# CSV format (pipe to other tools)
+nuget-docs list Newtonsoft.Json --format csv
+nuget-docs list Newtonsoft.Json --format csv --namespace Newtonsoft.Json.Linq
+```
+
+### Checking for deprecated/vulnerable packages
+
+```bash
+# Show deprecation markers on all versions
+nuget-docs versions WindowsAzure.Storage --deprecated
+
+# Check if a specific package version is deprecated
+nuget-docs info WindowsAzure.Storage
+
+# Find versions with known vulnerabilities
+nuget-docs versions System.Text.RegularExpressions --deprecated --stable
 ```
 
 ### Version-specific inspection

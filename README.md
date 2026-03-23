@@ -41,7 +41,9 @@ nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.3.0 --to latest
 ```bash
 nuget-docs list Microsoft.Extensions.AI.Abstractions
 nuget-docs list Newtonsoft.Json --namespace Newtonsoft.Json.Linq
-nuget-docs list Humanizer --all  # include internal types
+nuget-docs list Humanizer --all          # include internal types
+nuget-docs list Newtonsoft.Json --format table  # aligned columns
+nuget-docs list Newtonsoft.Json --format csv    # CSV output
 ```
 
 ### `show` — Decompile a type with XML docs
@@ -120,6 +122,7 @@ nuget-docs versions Humanizer --latest       # latest stable + prerelease
 nuget-docs versions Newtonsoft.Json --since 13.0.1           # versions after 13.0.1
 nuget-docs versions Newtonsoft.Json --since 13.0.1 --stable  # stable only, after 13.0.1
 nuget-docs versions Newtonsoft.Json --count --since 13.0.1   # just the count (for CI)
+nuget-docs versions WindowsAzure.Storage --deprecated       # show deprecation info
 nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
 ```
 
@@ -131,6 +134,8 @@ nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
 | `--framework <tfm>` | `-f` | Target framework (auto-detected by default) |
 | `--all` | `-a` | Include internal/private members |
 | `--namespace <prefix>` | `-n` | Filter by namespace prefix |
+| `--format <fmt>` | | Output format for `list`: `grouped` (default), `table`, `csv` |
+| `--deprecated` | | Show deprecation/vulnerability info (for `versions`) |
 | `--json` | `-j` | JSON output (shorthand for `--output json`) |
 | `--output json` | `-o json` | JSON output for programmatic use |
 
@@ -143,6 +148,7 @@ nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
 - API diff with unified diff, member-level changes, and breaking change detection
 - Version keywords: `latest`, `latest-stable`, `latest-prerelease` work on any `--version`, `--from`, `--to`
 - Dependency tree with transitive resolution and deduplication
+- Deprecation and vulnerability detection from NuGet registry
 - Version listing with stable/latest filters
 - Framework-aware: picks best matching TFM (net10.0 > net9.0 > ... > netstandard2.0)
 - AI-optimized plain text output

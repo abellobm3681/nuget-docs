@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NugetDocs.Cli.Services;
+using static NugetDocs.Cli.Services.NuGetMetadataService;
 
 namespace NugetDocs.Cli.Commands;
 
@@ -18,6 +19,7 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
         var since = parseResult.GetValue(command.SinceOption);
         var limit = parseResult.GetValue(command.LimitOption);
         var count = parseResult.GetValue(command.CountOption);
+        var showDeprecated = parseResult.GetValue(command.DeprecatedOption);
         var jsonOutput = CommonOptions.IsJsonOutput(parseResult, command.OutputOption, command.JsonOption);
 
         try
@@ -80,6 +82,14 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
                 versions = versions.Take(limit).ToList();
             }
 
+            // Fetch deprecation/vulnerability metadata if requested
+            Dictionary<string, VersionMetadata>? metadata = null;
+            if (showDeprecated)
+            {
+                metadata = await NuGetMetadataService.GetVersionMetadataAsync(
+                    package, cancellationToken).ConfigureAwait(false);
+            }
+
             if (count)
             {
                 if (jsonOutput)
@@ -95,24 +105,67 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
 
             if (jsonOutput)
             {
-                var json = latest
-                    ? new
+                if (showDeprecated && metadata is not null)
+                {
+                    var versionEntries = versions.Select(v =>
                     {
-                        package,
-                        total,
-                        stableOnly,
-                        latestStable = versions.FirstOrDefault(v => !IsPrerelease(v)),
-                        latestPrerelease = versions.FirstOrDefault(IsPrerelease),
-                        versions,
-                    }
-                    : (object)new
-                    {
-                        package,
-                        total,
-                        stableOnly,
-                        versions,
-                    };
-                Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
+                        metadata.TryGetValue(v, out var meta);
+                        return new
+                        {
+                            version = v,
+                            deprecated = meta?.IsDeprecated ?? false,
+                            deprecationReasons = meta?.DeprecationReasons,
+                            alternatePackage = meta?.AlternatePackageId,
+                            vulnerabilities = meta?.Vulnerabilities?.Select(vul => new
+                            {
+                                severity = vul.Severity,
+                                advisoryUrl = vul.AdvisoryUrl,
+                            }),
+                        };
+                    });
+
+                    var json = latest
+                        ? (object)new
+                        {
+                            package,
+                            total,
+                            stableOnly,
+                            latestStable = versions.FirstOrDefault(v => !IsPrerelease(v)),
+                            latestPrerelease = versions.FirstOrDefault(IsPrerelease),
+                            versions = versionEntries,
+                        }
+                        : new
+                        {
+                            package,
+                            total,
+                            stableOnly,
+                            latestStable = (string?)null,
+                            latestPrerelease = (string?)null,
+                            versions = versionEntries,
+                        };
+                    Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
+                }
+                else
+                {
+                    var json = latest
+                        ? new
+                        {
+                            package,
+                            total,
+                            stableOnly,
+                            latestStable = versions.FirstOrDefault(v => !IsPrerelease(v)),
+                            latestPrerelease = versions.FirstOrDefault(IsPrerelease),
+                            versions,
+                        }
+                        : (object)new
+                        {
+                            package,
+                            total,
+                            stableOnly,
+                            versions,
+                        };
+                    Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
+                }
             }
             else
             {
@@ -135,18 +188,21 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
                     var latestPrerelease = versions.FirstOrDefault(IsPrerelease);
                     if (latestStable is not null)
                     {
-                        Console.WriteLine($"  {latestStable}  (stable)");
+                        var marker = GetDeprecationMarker(latestStable, metadata);
+                        Console.WriteLine($"  {latestStable}  (stable){marker}");
                     }
                     if (latestPrerelease is not null)
                     {
-                        Console.WriteLine($"  {latestPrerelease}  (prerelease)");
+                        var marker = GetDeprecationMarker(latestPrerelease, metadata);
+                        Console.WriteLine($"  {latestPrerelease}  (prerelease){marker}");
                     }
                 }
                 else
                 {
                     foreach (var v in versions)
                     {
-                        Console.WriteLine($"  {v}");
+                        var marker = GetDeprecationMarker(v, metadata);
+                        Console.WriteLine($"  {v}{marker}");
                     }
                 }
 
@@ -164,6 +220,16 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
             Console.Error.WriteLine($"Error: {ex.Message}");
             return 1;
         }
+    }
+
+    private static string GetDeprecationMarker(string version, Dictionary<string, VersionMetadata>? metadata)
+    {
+        if (metadata is null || !metadata.TryGetValue(version, out var meta))
+        {
+            return "";
+        }
+
+        return $"  ** {meta.FormatShort()}";
     }
 
     private static bool IsPrerelease(string version) => version.Contains('-', StringComparison.Ordinal);
