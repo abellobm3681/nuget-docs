@@ -61,6 +61,8 @@ Short names work — `IChatClient` resolves to `Microsoft.Extensions.AI.IChatCli
 ```bash
 nuget-docs search Microsoft.Extensions.AI.Abstractions "Chat*"
 nuget-docs search Newtonsoft.Json "*Token*" --namespace Newtonsoft.Json.Linq
+nuget-docs search Newtonsoft.Json "*Token*" --format table  # aligned columns
+nuget-docs search Newtonsoft.Json "*Convert*" --format csv  # CSV output
 ```
 
 Uses glob patterns (`*` and `?` wildcards). Results show `[Kind.MemberKind]` labels.
@@ -134,7 +136,7 @@ nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
 | `--framework <tfm>` | `-f` | Target framework (auto-detected by default) |
 | `--all` | `-a` | Include internal/private members |
 | `--namespace <prefix>` | `-n` | Filter by namespace prefix |
-| `--format <fmt>` | | Output format for `list`: `grouped` (default), `table`, `csv` |
+| `--format <fmt>` | | Output format for `list`/`search`: `grouped` (default), `table`, `csv` |
 | `--deprecated` | | Show deprecation/vulnerability info (for `versions`) |
 | `--json` | `-j` | JSON output (shorthand for `--output json`) |
 | `--output json` | `-o json` | JSON output for programmatic use |

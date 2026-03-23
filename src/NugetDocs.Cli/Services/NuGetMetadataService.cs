@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,11 +7,15 @@ namespace NugetDocs.Cli.Services;
 
 /// <summary>
 /// Queries the NuGet V3 registration API for package metadata (deprecation, vulnerabilities).
+/// Results are cached in-memory for the process lifetime to avoid repeated API calls.
 /// </summary>
 internal static class NuGetMetadataService
 {
+    private static readonly ConcurrentDictionary<string, Dictionary<string, VersionMetadata>> Cache = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// Get deprecation and vulnerability info for all versions of a package.
+    /// Results are cached per package ID for the process lifetime.
     /// </summary>
     public static async Task<Dictionary<string, VersionMetadata>> GetVersionMetadataAsync(
         string packageId,
@@ -19,6 +24,12 @@ internal static class NuGetMetadataService
 #pragma warning disable CA1308 // NuGet API requires lowercase
         var id = packageId.ToLowerInvariant();
 #pragma warning restore CA1308
+
+        if (Cache.TryGetValue(id, out var cached))
+        {
+            return cached;
+        }
+
         var result = new Dictionary<string, VersionMetadata>(StringComparer.OrdinalIgnoreCase);
 
         using var handler = new HttpClientHandler
@@ -94,6 +105,7 @@ internal static class NuGetMetadataService
             }
         }
 
+        Cache.TryAdd(id, result);
         return result;
     }
 

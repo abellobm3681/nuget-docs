@@ -53,10 +53,10 @@ Decompiles the full type to C# source with `///` XML documentation comments. **S
 ### Search types and members
 
 ```bash
-nuget-docs search <Package> <pattern> [--version <ver>] [--framework <tfm>] [--all] [--namespace <prefix>] [--json] [--output json]
+nuget-docs search <Package> <pattern> [--version <ver>] [--framework <tfm>] [--all] [--namespace <prefix>] [--format table|csv] [--json] [--output json]
 ```
 
-Searches types and members using glob patterns (`*` and `?` wildcards). Results show `[Kind.MemberKind]` labels. By default searches only public/protected members; use `--all` (`-a`) to include private and internal. Use `--namespace` (`-n`) to filter by namespace prefix.
+Searches types and members using glob patterns (`*` and `?` wildcards). Results show `[Kind.MemberKind]` labels. By default searches only public/protected members; use `--all` (`-a`) to include private and internal. Use `--namespace` (`-n`) to filter by namespace prefix. Use `--format table` for aligned columns or `--format csv` for CSV output.
 
 ### Compare API between versions
 
@@ -119,7 +119,7 @@ Lists all available versions of a package from NuGet.org, newest first. Use `--s
 - **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
 - **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--prerelease` for prerelease only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version (supports `latest`, `latest-stable`, `latest-prerelease` keywords); `--count` for just the number; `--deprecated` to show deprecation/vulnerability markers; useful before `diff`
 - **Deprecation check**: Use `--deprecated` with `versions` to see which versions are deprecated or have known vulnerabilities. The `info` command always shows deprecation status automatically
-- **Alternative output formats**: Use `--format table` with `list` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
+- **Alternative output formats**: Use `--format table` with `list` or `search` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
 - **JSON output**: Use `--json` (`-j`) or `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down
@@ -247,10 +247,11 @@ nuget-docs diff Newtonsoft.Json --from 13.0.3 --to 13.0.4 --output json
 ```bash
 # Table format with aligned columns
 nuget-docs list Newtonsoft.Json --format table
+nuget-docs search Newtonsoft.Json "*Token*" --format table
 
 # CSV format (pipe to other tools)
 nuget-docs list Newtonsoft.Json --format csv
-nuget-docs list Newtonsoft.Json --format csv --namespace Newtonsoft.Json.Linq
+nuget-docs search Newtonsoft.Json "*Convert*" --format csv
 ```
 
 ### Checking for deprecated/vulnerable packages

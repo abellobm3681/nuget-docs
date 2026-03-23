@@ -15,6 +15,7 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
         var framework = parseResult.GetValue(command.FrameworkOption);
         var showAll = parseResult.GetValue(command.AllOption);
         var namespaceFilter = parseResult.GetValue(command.NamespaceOption);
+        var format = parseResult.GetValue(command.FormatOption);
         var jsonOutput = CommonOptions.IsJsonOutput(parseResult, command.OutputOption, command.JsonOption);
 
         try
@@ -48,6 +49,39 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
                 };
                 Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
             }
+            else if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Kind,MemberKind,Name,FullName");
+                foreach (var result in results)
+                {
+                    Console.WriteLine($"{result.Kind},{result.MemberKind ?? ""},{CsvEscape(result.Name)},{CsvEscape(result.FullName)}");
+                }
+            }
+            else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Package: {resolved.PackageId} {resolved.Version} ({resolved.Framework})");
+                Console.WriteLine($"Pattern: {pattern}");
+                Console.WriteLine($"Results: {results.Count}");
+                Console.WriteLine();
+
+                var rows = results.Select(r => new
+                {
+                    Kind = r.MemberKind is not null ? $"{r.Kind}.{r.MemberKind}" : r.Kind,
+                    Name = r.Name,
+                    FullName = r.FullName,
+                }).ToList();
+
+                var colKind = Math.Max("Kind".Length, rows.Count > 0 ? rows.Max(r => r.Kind.Length) : 0);
+                var colName = Math.Max("Name".Length, rows.Count > 0 ? rows.Max(r => r.Name.Length) : 0);
+
+                Console.WriteLine($"  {"Kind".PadRight(colKind)}  {"Name".PadRight(colName)}  FullName");
+                Console.WriteLine($"  {new string('-', colKind)}  {new string('-', colName)}  --------");
+
+                foreach (var row in rows)
+                {
+                    Console.WriteLine($"  {row.Kind.PadRight(colKind)}  {row.Name.PadRight(colName)}  {row.FullName}");
+                }
+            }
             else
             {
                 Console.WriteLine($"Package: {resolved.PackageId} {resolved.Version} ({resolved.Framework})");
@@ -72,5 +106,16 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
             Console.Error.WriteLine($"Error: {ex.Message}");
             return 1;
         }
+    }
+
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains(',', StringComparison.Ordinal) ||
+            value.Contains('"', StringComparison.Ordinal) ||
+            value.Contains('\n', StringComparison.Ordinal))
+        {
+            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        }
+        return value;
     }
 }
