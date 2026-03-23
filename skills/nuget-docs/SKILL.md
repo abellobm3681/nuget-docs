@@ -74,12 +74,21 @@ nuget-docs info <Package> [--version <ver>] [--output json]
 
 Shows package ID, version, authors, description, license, frameworks, and dependencies.
 
+### Dependency tree
+
+```bash
+nuget-docs deps <Package> [--version <ver>] [--framework <tfm>] [--depth <n>] [--output json]
+```
+
+Shows the dependency tree of a package. Use `--depth` (`-d`) to control transitive resolution depth (default: 1 = direct only). Use `--depth 0` for no resolution, `--depth 2` or higher for transitive dependencies.
+
 ## Efficient Usage Patterns
 
 1. **Start broad**: `nuget-docs list <pkg>` to see all public types
 2. **Narrow down**: `nuget-docs search <pkg> "Chat*"` to find types/members matching a pattern
 3. **Deep dive**: `nuget-docs show <pkg> <TypeName>` for full type details
 4. **Compare versions**: `nuget-docs diff <pkg> --from 1.0 --to 2.0` to see what changed
+5. **Check dependencies**: `nuget-docs deps <pkg>` to see what a package depends on
 
 ## Tips for AI Agents
 
@@ -98,6 +107,7 @@ Shows package ID, version, authors, description, license, frameworks, and depend
 - **Skip additive changes**: Use `--no-additive` with `diff` to hide purely additive changes (new types, additive-only type modifications) and show only removals/modifications — works with both source-level and member-level diffs
 - **Ignore doc changes**: Use `--ignore-docs` with `diff` to skip XML doc comment changes — reduces noise when only code changes matter
 - **CI integration**: `diff` returns exit code 2 when breaking changes are detected (0 = clean, 1 = error)
+- **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive
 - **JSON output**: Use `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down
@@ -126,6 +136,12 @@ nuget-docs list Humanizer
 
 # Check metadata and dependencies
 nuget-docs info Humanizer
+
+# See what it depends on
+nuget-docs deps Humanizer
+
+# Full transitive dependency tree
+nuget-docs deps Microsoft.Extensions.AI --depth 3
 ```
 
 ### Inspecting a specific member

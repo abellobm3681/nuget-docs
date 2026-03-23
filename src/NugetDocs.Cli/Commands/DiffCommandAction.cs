@@ -115,7 +115,7 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             {
                 filteredAdded = []; // Skip all added types
                 filteredChanged = filteredChanged
-                    .Where(c => !IsPurelyAdditive(c))
+                    .Where(c => !IsPurelyAdditive(c, ignoreDocs))
                     .ToList();
             }
 
@@ -242,8 +242,9 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
     /// <summary>
     /// Check if a changed type has only additive changes (no removals or modifications).
     /// Works for both member-diff and source-level diff modes.
+    /// When ignoreDocs is true, doc comment changes are stripped before checking.
     /// </summary>
-    private static bool IsPurelyAdditive(ChangedType c)
+    private static bool IsPurelyAdditive(ChangedType c, bool ignoreDocs)
     {
         // Member-level diff: purely additive if no removals and no changed signatures
         if (c.Members is not null)
@@ -257,8 +258,10 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             return false; // Can't determine, keep it
         }
 
-        var fromLines = c.FromSource.Split('\n');
-        var toLines = c.ToSource.Split('\n');
+        var fromSource = ignoreDocs ? StripDocComments(c.FromSource) : c.FromSource;
+        var toSource = ignoreDocs ? StripDocComments(c.ToSource) : c.ToSource;
+        var fromLines = fromSource.Split('\n');
+        var toLines = toSource.Split('\n');
         var edits = MyersDiff.Compute(fromLines, toLines);
 
         return !edits.Any(e => e.Kind == MyersDiff.EditKind.Delete && IsSignificantLine(e.Line));
