@@ -12,6 +12,7 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
     {
         var package = parseResult.GetValue(command.PackageArgument)!;
         var stableOnly = parseResult.GetValue(command.StableOption);
+        var latest = parseResult.GetValue(command.LatestOption);
         var limit = parseResult.GetValue(command.LimitOption);
         var output = parseResult.GetValue(command.OutputOption);
 
@@ -33,33 +34,72 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
             // Show newest first
             versions.Reverse();
 
+            if (latest)
+            {
+                var latestStable = versions.FirstOrDefault(v => !v.Contains('-'));
+                var latestPrerelease = versions.FirstOrDefault(v => v.Contains('-'));
+                versions = new[] { latestStable, latestPrerelease }
+                    .Where(v => v is not null)
+                    .Cast<string>()
+                    .ToList();
+            }
+
             var total = versions.Count;
-            if (limit > 0 && versions.Count > limit)
+            if (!latest && limit > 0 && versions.Count > limit)
             {
                 versions = versions.Take(limit).ToList();
             }
 
             if (string.Equals(output, "json", StringComparison.OrdinalIgnoreCase))
             {
-                var json = new
-                {
-                    package,
-                    total,
-                    stableOnly,
-                    versions,
-                };
+                var json = latest
+                    ? new
+                    {
+                        package,
+                        total,
+                        stableOnly,
+                        latestStable = versions.FirstOrDefault(v => !v.Contains('-')),
+                        latestPrerelease = versions.FirstOrDefault(v => v.Contains('-')),
+                        versions,
+                    }
+                    : (object)new
+                    {
+                        package,
+                        total,
+                        stableOnly,
+                        versions,
+                    };
                 Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
             }
             else
             {
-                var filter = stableOnly ? " (stable only)" : "";
+                var filter = latest ? " (latest)" : stableOnly ? " (stable only)" : "";
                 Console.WriteLine($"// Versions: {package}{filter}");
-                Console.WriteLine($"// Total: {total}");
+                if (!latest)
+                {
+                    Console.WriteLine($"// Total: {total}");
+                }
                 Console.WriteLine();
 
-                foreach (var v in versions)
+                if (latest)
                 {
-                    Console.WriteLine($"  {v}");
+                    var latestStable = versions.FirstOrDefault(v => !v.Contains('-'));
+                    var latestPrerelease = versions.FirstOrDefault(v => v.Contains('-'));
+                    if (latestStable is not null)
+                    {
+                        Console.WriteLine($"  {latestStable}  (stable)");
+                    }
+                    if (latestPrerelease is not null)
+                    {
+                        Console.WriteLine($"  {latestPrerelease}  (prerelease)");
+                    }
+                }
+                else
+                {
+                    foreach (var v in versions)
+                    {
+                        Console.WriteLine($"  {v}");
+                    }
                 }
 
                 if (limit > 0 && total > limit)
