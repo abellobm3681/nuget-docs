@@ -75,31 +75,40 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
     {
         var key = $"{packageName}@{version}".ToLowerInvariant();
         var children = new List<DepNode>();
+        var deduplicated = false;
 
-        if (currentDepth < maxDepth && visited.Add(key))
+        if (currentDepth < maxDepth)
         {
-            try
+            if (!visited.Add(key))
             {
-                var resolved = await PackageResolver.ResolveAsync(
-                    packageName, version, framework, cancellationToken).ConfigureAwait(false);
-
-                var deps = GetDependenciesFromNuspec(resolved.PackageDir, resolved.Framework);
-
-                foreach (var dep in deps)
-                {
-                    var child = await ResolveNodeAsync(
-                        dep.Id, dep.Version, framework,
-                        currentDepth + 1, maxDepth, visited, cancellationToken).ConfigureAwait(false);
-                    children.Add(child);
-                }
+                // Already resolved this package — mark as deduplicated
+                deduplicated = true;
             }
-            catch
+            else
             {
-                // Can't resolve this dependency — show what we know
+                try
+                {
+                    var resolved = await PackageResolver.ResolveAsync(
+                        packageName, version, framework, cancellationToken).ConfigureAwait(false);
+
+                    var deps = GetDependenciesFromNuspec(resolved.PackageDir, resolved.Framework);
+
+                    foreach (var dep in deps)
+                    {
+                        var child = await ResolveNodeAsync(
+                            dep.Id, dep.Version, framework,
+                            currentDepth + 1, maxDepth, visited, cancellationToken).ConfigureAwait(false);
+                        children.Add(child);
+                    }
+                }
+                catch
+                {
+                    // Can't resolve this dependency — show what we know
+                }
             }
         }
 
-        return new DepNode(packageName, version, children);
+        return new DepNode(packageName, version, children, deduplicated);
     }
 
     private static List<DepEntry> GetDependenciesFromNuspec(string packageDir, string framework)
@@ -184,8 +193,9 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
             var node = nodes[i];
             var last = i == nodes.Count - 1;
             var connector = last ? "└── " : "├── ";
+            var dedup = node.Deduplicated ? " (already listed)" : "";
 
-            Console.WriteLine($"{indent}{connector}{node.Id} {node.Version}");
+            Console.WriteLine($"{indent}{connector}{node.Id} {node.Version}{dedup}");
 
             if (node.Dependencies.Count > 0)
             {
@@ -196,5 +206,5 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
     }
 
     private record DepEntry(string Id, string Version);
-    private record DepNode(string Id, string Version, List<DepNode> Dependencies);
+    private record DepNode(string Id, string Version, List<DepNode> Dependencies, bool Deduplicated = false);
 }

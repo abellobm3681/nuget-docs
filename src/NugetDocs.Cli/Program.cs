@@ -8,6 +8,7 @@ var rootCommand = new RootCommand("Inspect public API documentation from any NuG
     new SearchCommand(),
     new InfoCommand(),
     new DepsCommand(),
+    new VersionsCommand(),
     new DiffCommand(),
 };
 

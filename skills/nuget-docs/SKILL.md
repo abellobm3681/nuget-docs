@@ -80,7 +80,15 @@ Shows package ID, version, authors, description, license, frameworks, and depend
 nuget-docs deps <Package> [--version <ver>] [--framework <tfm>] [--depth <n>] [--output json]
 ```
 
-Shows the dependency tree of a package. Use `--depth` (`-d`) to control transitive resolution depth (default: 1 = direct only). Use `--depth 0` for no resolution, `--depth 2` or higher for transitive dependencies.
+Shows the dependency tree of a package with tree-style output. Use `--depth` (`-d`) to control transitive resolution depth (default: 1 = direct only). Use `--depth 2` or higher for transitive dependencies. Shared dependencies are marked with `(already listed)` to avoid confusion.
+
+### List available versions
+
+```bash
+nuget-docs versions <Package> [--stable] [--limit <n>] [--output json]
+```
+
+Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to exclude prereleases. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
 
 ## Efficient Usage Patterns
 
@@ -89,6 +97,7 @@ Shows the dependency tree of a package. Use `--depth` (`-d`) to control transiti
 3. **Deep dive**: `nuget-docs show <pkg> <TypeName>` for full type details
 4. **Compare versions**: `nuget-docs diff <pkg> --from 1.0 --to 2.0` to see what changed
 5. **Check dependencies**: `nuget-docs deps <pkg>` to see what a package depends on
+6. **Find versions**: `nuget-docs versions <pkg> --stable` to pick a version for `diff` or `show`
 
 ## Tips for AI Agents
 
@@ -107,7 +116,8 @@ Shows the dependency tree of a package. Use `--depth` (`-d`) to control transiti
 - **Skip additive changes**: Use `--no-additive` with `diff` to hide purely additive changes (new types, additive-only type modifications) and show only removals/modifications — works with both source-level and member-level diffs
 - **Ignore doc changes**: Use `--ignore-docs` with `diff` to skip XML doc comment changes — reduces noise when only code changes matter
 - **CI integration**: `diff` returns exit code 2 when breaking changes are detected (0 = clean, 1 = error)
-- **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive
+- **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
+- **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; useful before `diff`
 - **JSON output**: Use `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down
@@ -142,6 +152,9 @@ nuget-docs deps Humanizer
 
 # Full transitive dependency tree
 nuget-docs deps Microsoft.Extensions.AI --depth 3
+
+# Check available versions (stable only)
+nuget-docs versions Humanizer --stable
 ```
 
 ### Inspecting a specific member
