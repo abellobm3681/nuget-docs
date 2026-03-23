@@ -110,9 +110,11 @@ Shows package ID, version, authors, description, license, frameworks, and depend
 ```bash
 nuget-docs deps Microsoft.Extensions.AI
 nuget-docs deps Microsoft.Extensions.AI --depth 3  # transitive
+nuget-docs deps Microsoft.Extensions.AI --format table  # aligned columns
+nuget-docs deps Microsoft.Extensions.AI --format csv    # CSV output
 ```
 
-Tree-style output with `├──`/`└──` connectors. Shared dependencies marked `(already listed)`.
+Tree-style output with `├──`/`└──` connectors. Shared dependencies marked `(already listed)`. Use `--format table` or `--format csv` for flat tabular output.
 
 ### `versions` — List available versions
 
@@ -126,6 +128,8 @@ nuget-docs versions Newtonsoft.Json --since 13.0.1 --stable  # stable only, afte
 nuget-docs versions Newtonsoft.Json --count --since 13.0.1   # just the count (for CI)
 nuget-docs versions WindowsAzure.Storage --deprecated       # show deprecation info
 nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
+nuget-docs versions Humanizer --format table            # aligned columns
+nuget-docs versions Humanizer --format csv              # CSV output
 ```
 
 ### Common options
@@ -136,7 +140,7 @@ nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
 | `--framework <tfm>` | `-f` | Target framework (auto-detected by default) |
 | `--all` | `-a` | Include internal/private members |
 | `--namespace <prefix>` | `-n` | Filter by namespace prefix |
-| `--format <fmt>` | | Output format for `list`/`search`: `grouped` (default), `table`, `csv` |
+| `--format <fmt>` | | Output format for `list`/`search`/`versions`/`deps`: `grouped` (default), `table`, `csv` |
 | `--deprecated` | | Show deprecation/vulnerability info (for `versions`) |
 | `--json` | `-j` | JSON output (shorthand for `--output json`) |
 | `--output json` | `-o json` | JSON output for programmatic use |

@@ -14,6 +14,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         var version = parseResult.GetValue(command.VersionOption);
         var framework = parseResult.GetValue(command.FrameworkOption);
         var maxDepth = parseResult.GetValue(command.DepthOption);
+        var format = parseResult.GetValue(command.FormatOption);
         var jsonOutput = CommonOptions.IsJsonOutput(parseResult, command.OutputOption, command.JsonOption);
 
         try
@@ -27,6 +28,46 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
             if (jsonOutput)
             {
                 Console.WriteLine(JsonSerializer.Serialize(tree, JsonOptions.Indented));
+            }
+            else if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Depth,Package,Version,Deduplicated");
+                FlattenTree(tree.Dependencies, 0, (node, depth) =>
+                {
+                    var dedup = node.Deduplicated ? "true" : "false";
+                    Console.WriteLine($"{depth},{CommonOptions.CsvEscape(node.Id)},{CommonOptions.CsvEscape(node.Version)},{dedup}");
+                });
+            }
+            else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Dependencies: {package} {resolved.Version} ({resolved.Framework})");
+                Console.WriteLine();
+
+                if (tree.Dependencies.Count == 0)
+                {
+                    Console.WriteLine("No dependencies.");
+                }
+                else
+                {
+                    var rows = new List<(int Depth, string Id, string Version, bool Deduplicated)>();
+                    FlattenTree(tree.Dependencies, 0, (node, depth) =>
+                    {
+                        rows.Add((depth, node.Id, node.Version, node.Deduplicated));
+                    });
+
+                    var colDepth = "Depth".Length;
+                    var colId = Math.Max("Package".Length, rows.Max(r => r.Id.Length));
+                    var colVer = Math.Max("Version".Length, rows.Max(r => r.Version.Length));
+
+                    Console.WriteLine($"  {"Depth".PadRight(colDepth)}  {"Package".PadRight(colId)}  {"Version".PadRight(colVer)}  Note");
+                    Console.WriteLine($"  {new string('-', colDepth)}  {new string('-', colId)}  {new string('-', colVer)}  ----");
+
+                    foreach (var row in rows)
+                    {
+                        var note = row.Deduplicated ? "(already listed)" : "";
+                        Console.WriteLine($"  {row.Depth.ToString(System.Globalization.CultureInfo.InvariantCulture).PadRight(colDepth)}  {row.Id.PadRight(colId)}  {row.Version.PadRight(colVer)}  {note}");
+                    }
+                }
             }
             else
             {
@@ -184,6 +225,18 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         }
 
         return parts.Length > 1 ? parts[1].Trim() : versionRange;
+    }
+
+    private static void FlattenTree(List<DepNode> nodes, int depth, Action<DepNode, int> action)
+    {
+        foreach (var node in nodes)
+        {
+            action(node, depth);
+            if (node.Dependencies.Count > 0)
+            {
+                FlattenTree(node.Dependencies, depth + 1, action);
+            }
+        }
     }
 
     private static void PrintTree(List<DepNode> nodes, string indent, bool isLast)

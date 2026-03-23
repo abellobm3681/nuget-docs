@@ -51,4 +51,25 @@ internal static class CommonOptions
         Description = "Shorthand for --output json",
         DefaultValueFactory = _ => false,
     };
+
+    public static Option<string?> Format => new(
+        name: "--format")
+    {
+        Description = "Output format: grouped (default), table, or csv",
+        DefaultValueFactory = _ => null,
+    };
+
+    /// <summary>
+    /// Escape a value for CSV output (RFC 4180).
+    /// </summary>
+    public static string CsvEscape(string value)
+    {
+        if (value.Contains(',', StringComparison.Ordinal) ||
+            value.Contains('"', StringComparison.Ordinal) ||
+            value.Contains('\n', StringComparison.Ordinal))
+        {
+            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        }
+        return value;
+    }
 }

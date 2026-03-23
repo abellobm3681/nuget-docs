@@ -54,7 +54,7 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
                 Console.WriteLine("Kind,MemberKind,Name,FullName");
                 foreach (var result in results)
                 {
-                    Console.WriteLine($"{result.Kind},{result.MemberKind ?? ""},{CsvEscape(result.Name)},{CsvEscape(result.FullName)}");
+                    Console.WriteLine($"{result.Kind},{result.MemberKind ?? ""},{CommonOptions.CsvEscape(result.Name)},{CommonOptions.CsvEscape(result.FullName)}");
                 }
             }
             else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
@@ -108,14 +108,4 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
         }
     }
 
-    private static string CsvEscape(string value)
-    {
-        if (value.Contains(',', StringComparison.Ordinal) ||
-            value.Contains('"', StringComparison.Ordinal) ||
-            value.Contains('\n', StringComparison.Ordinal))
-        {
-            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
-        }
-        return value;
-    }
 }

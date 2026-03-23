@@ -59,7 +59,7 @@ internal sealed class ListCommandAction(ListCommand command) : AsynchronousComma
                         ? $"{type.Name}<{new string(',', type.GenericParameterCount - 1)}>"
                         : type.Name;
                     var summary = xmlDocs?.GetTypeSummary(type.FullName) ?? "";
-                    Console.WriteLine($"{type.Kind},{CsvEscape(displayName)},{CsvEscape(type.FullName)},{CsvEscape(type.Namespace)},{CsvEscape(summary)}");
+                    Console.WriteLine($"{type.Kind},{CommonOptions.CsvEscape(displayName)},{CommonOptions.CsvEscape(type.FullName)},{CommonOptions.CsvEscape(type.Namespace)},{CommonOptions.CsvEscape(summary)}");
                 }
             }
             else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
@@ -126,17 +126,6 @@ internal sealed class ListCommandAction(ListCommand command) : AsynchronousComma
             Console.Error.WriteLine($"Error: {ex.Message}");
             return 1;
         }
-    }
-
-    private static string CsvEscape(string value)
-    {
-        if (value.Contains(',', StringComparison.Ordinal) ||
-            value.Contains('"', StringComparison.Ordinal) ||
-            value.Contains('\n', StringComparison.Ordinal))
-        {
-            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
-        }
-        return value;
     }
 
     private static int GetKindOrder(string kind) => kind switch

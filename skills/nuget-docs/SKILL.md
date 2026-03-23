@@ -77,18 +77,18 @@ Shows package ID, version, authors, description, license, frameworks, and depend
 ### Dependency tree
 
 ```bash
-nuget-docs deps <Package> [--version <ver>] [--framework <tfm>] [--depth <n>] [--json] [--output json]
+nuget-docs deps <Package> [--version <ver>] [--framework <tfm>] [--depth <n>] [--format table|csv] [--json] [--output json]
 ```
 
-Shows the dependency tree of a package with tree-style output. Use `--depth` (`-d`) to control transitive resolution depth (default: 1 = direct only). Use `--depth 2` or higher for transitive dependencies. Shared dependencies are marked with `(already listed)` to avoid confusion.
+Shows the dependency tree of a package with tree-style output. Use `--depth` (`-d`) to control transitive resolution depth (default: 1 = direct only). Use `--depth 2` or higher for transitive dependencies. Shared dependencies are marked with `(already listed)` to avoid confusion. Use `--format table` for aligned columns or `--format csv` for CSV output.
 
 ### List available versions
 
 ```bash
-nuget-docs versions <Package> [--stable] [--prerelease] [--latest] [--since <ver>] [--count] [--deprecated] [--limit <n>] [--json] [--output json]
+nuget-docs versions <Package> [--stable] [--prerelease] [--latest] [--since <ver>] [--count] [--deprecated] [--format table|csv] [--limit <n>] [--json] [--output json]
 ```
 
-Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to show only stable versions. Use `--prerelease` (`-p`) to show only prerelease versions. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--since` to show only versions newer than the specified version. Use `--count` (`-c`) to output only the count of matching versions (useful for CI). Use `--deprecated` to show deprecation and vulnerability info for each version. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
+Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to show only stable versions. Use `--prerelease` (`-p`) to show only prerelease versions. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--since` to show only versions newer than the specified version. Use `--count` (`-c`) to output only the count of matching versions (useful for CI). Use `--deprecated` to show deprecation and vulnerability info for each version. Use `--format table` for aligned columns or `--format csv` for CSV output. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
 
 ## Efficient Usage Patterns
 
@@ -119,7 +119,7 @@ Lists all available versions of a package from NuGet.org, newest first. Use `--s
 - **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
 - **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--prerelease` for prerelease only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version (supports `latest`, `latest-stable`, `latest-prerelease` keywords); `--count` for just the number; `--deprecated` to show deprecation/vulnerability markers; useful before `diff`
 - **Deprecation check**: Use `--deprecated` with `versions` to see which versions are deprecated or have known vulnerabilities. The `info` command always shows deprecation status automatically
-- **Alternative output formats**: Use `--format table` with `list` or `search` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
+- **Alternative output formats**: Use `--format table` with `list`, `search`, `versions`, or `deps` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
 - **JSON output**: Use `--json` (`-j`) or `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down

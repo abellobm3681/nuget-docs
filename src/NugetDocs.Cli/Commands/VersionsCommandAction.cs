@@ -20,6 +20,7 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
         var limit = parseResult.GetValue(command.LimitOption);
         var count = parseResult.GetValue(command.CountOption);
         var showDeprecated = parseResult.GetValue(command.DeprecatedOption);
+        var format = parseResult.GetValue(command.FormatOption);
         var jsonOutput = CommonOptions.IsJsonOutput(parseResult, command.OutputOption, command.JsonOption);
 
         try
@@ -165,6 +166,78 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
                             versions,
                         };
                     Console.WriteLine(JsonSerializer.Serialize(json, JsonOptions.Indented));
+                }
+            }
+            else if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var header = showDeprecated ? "Version,Prerelease,Deprecated,Info" : "Version,Prerelease";
+                Console.WriteLine(header);
+                foreach (var v in versions)
+                {
+                    var pre = IsPrerelease(v) ? "true" : "false";
+                    if (showDeprecated)
+                    {
+                        var info = metadata is not null && metadata.TryGetValue(v, out var meta)
+                            ? meta.FormatShort() : "";
+                        var dep = info.Length > 0 ? "true" : "false";
+                        Console.WriteLine($"{CommonOptions.CsvEscape(v)},{pre},{dep},{CommonOptions.CsvEscape(info)}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{CommonOptions.CsvEscape(v)},{pre}");
+                    }
+                }
+            }
+            else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = new List<string>();
+                if (latest) parts.Add("latest");
+                if (stableOnly) parts.Add("stable only");
+                if (prereleaseOnly) parts.Add("prerelease only");
+                if (since is not null) parts.Add($"since {since}");
+                var filter = parts.Count > 0 ? $" ({string.Join(", ", parts)})" : "";
+                Console.WriteLine($"Versions: {package}{filter}");
+                if (!latest)
+                {
+                    Console.WriteLine($"Total: {total}");
+                }
+                Console.WriteLine();
+
+                var rows = versions.Select(v => new
+                {
+                    Version = v,
+                    Prerelease = IsPrerelease(v) ? "yes" : "",
+                    Info = showDeprecated && metadata is not null && metadata.TryGetValue(v, out var meta)
+                        ? meta.FormatShort() : "",
+                }).ToList();
+
+                var colVer = Math.Max("Version".Length, rows.Count > 0 ? rows.Max(r => r.Version.Length) : 0);
+                var colPre = Math.Max("Pre".Length, rows.Count > 0 ? rows.Max(r => r.Prerelease.Length) : 0);
+
+                if (showDeprecated)
+                {
+                    var colInfo = Math.Max("Info".Length, rows.Count > 0 ? rows.Max(r => r.Info.Length) : 0);
+                    Console.WriteLine($"  {"Version".PadRight(colVer)}  {"Pre".PadRight(colPre)}  Info");
+                    Console.WriteLine($"  {new string('-', colVer)}  {new string('-', colPre)}  {new string('-', Math.Max(colInfo, 4))}");
+                    foreach (var row in rows)
+                    {
+                        Console.WriteLine($"  {row.Version.PadRight(colVer)}  {row.Prerelease.PadRight(colPre)}  {row.Info}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"  {"Version".PadRight(colVer)}  Pre");
+                    Console.WriteLine($"  {new string('-', colVer)}  {new string('-', Math.Max(colPre, 3))}");
+                    foreach (var row in rows)
+                    {
+                        Console.WriteLine($"  {row.Version.PadRight(colVer)}  {row.Prerelease}");
+                    }
+                }
+
+                if (limit > 0 && total > limit)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"  ... and {total - limit} more (use --limit 0 to show all)");
                 }
             }
             else

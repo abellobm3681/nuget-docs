@@ -40,6 +40,7 @@ internal sealed class VersionsCommand : Command
         Description = "Show deprecation and vulnerability info for each version",
         DefaultValueFactory = _ => false,
     };
+    public Option<string?> FormatOption { get; } = CommonOptions.Format;
     public Option<string?> OutputOption { get; } = CommonOptions.Output;
     public Option<bool> JsonOption { get; } = CommonOptions.Json;
 
@@ -53,6 +54,7 @@ internal sealed class VersionsCommand : Command
         Options.Add(LimitOption);
         Options.Add(CountOption);
         Options.Add(DeprecatedOption);
+        Options.Add(FormatOption);
         Options.Add(OutputOption);
         Options.Add(JsonOption);
 
