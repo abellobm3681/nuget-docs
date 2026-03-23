@@ -5,14 +5,14 @@ namespace NugetDocs.Cli.Services;
 /// </summary>
 internal static class MyersDiff
 {
-    public enum EditKind
+    internal enum EditKind
     {
         Equal,
         Insert,
         Delete,
     }
 
-    public record Edit(EditKind Kind, string Line);
+    internal sealed record Edit(EditKind Kind, string Line);
 
     /// <summary>
     /// Compute the diff between two line sequences using the Myers algorithm.

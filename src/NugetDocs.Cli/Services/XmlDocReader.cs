@@ -8,7 +8,7 @@ namespace NugetDocs.Cli.Services;
 /// </summary>
 internal sealed partial class XmlDocReader
 {
-    public record XmlDocEntry(string Summary, string? Returns, string? Remarks);
+    internal sealed record XmlDocEntry(string Summary, string? Returns, string? Remarks);
 
     private readonly Dictionary<string, XmlDocEntry> _entries = new(StringComparer.Ordinal);
 

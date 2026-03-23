@@ -175,5 +175,5 @@ internal sealed class InfoCommandAction(InfoCommand command) : AsynchronousComma
         return string.IsNullOrEmpty(value) ? null : value;
     }
 
-    private record DepInfo(string Id, string Version);
+    private sealed record DepInfo(string Id, string Version);
 }

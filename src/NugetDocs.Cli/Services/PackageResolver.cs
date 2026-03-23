@@ -18,7 +18,7 @@ internal sealed class PackageResolver
         "netstandard2.1", "netstandard2.0",
     ];
 
-    public record ResolvedPackage(
+    internal sealed record ResolvedPackage(
         string PackageId,
         string Version,
         string Framework,
@@ -125,7 +125,7 @@ internal sealed class PackageResolver
     {
         var versions = Directory.GetDirectories(packageCacheDir)
             .Select(d => Path.GetFileName(d))
-            .Where(v => v is not null && !v.Contains('-')) // stable only
+            .Where(v => v is not null && !v.Contains('-', StringComparison.Ordinal)) // stable only
             .OrderByDescending(v => v, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -153,7 +153,7 @@ internal sealed class PackageResolver
 
         // Pick latest stable, or latest prerelease if no stable
         var stable = response.Versions?
-            .Where(v => !v.Contains('-'))
+            .Where(v => !v.Contains('-', StringComparison.Ordinal))
             .LastOrDefault();
 
         var version = stable ?? response.Versions?.LastOrDefault()
@@ -304,7 +304,7 @@ internal sealed class PackageResolver
         // Try matching with dots replaced (e.g., Microsoft.Extensions.AI -> Microsoft.Extensions.AI.dll)
         primaryDll ??= dlls.FirstOrDefault(d =>
             Path.GetFileNameWithoutExtension(d)?
-                .Equals(packageId.Replace("-", "."), StringComparison.OrdinalIgnoreCase) == true);
+                .Equals(packageId.Replace("-", ".", StringComparison.Ordinal), StringComparison.OrdinalIgnoreCase) == true);
 
         return primaryDll ?? dlls[0];
     }
@@ -328,13 +328,13 @@ internal sealed class PackageResolver
 
         if (string.Equals(keyword, "latest-prerelease", StringComparison.OrdinalIgnoreCase))
         {
-            return versions.Where(v => v.Contains('-')).LastOrDefault()
+            return versions.Where(v => v.Contains('-', StringComparison.Ordinal)).LastOrDefault()
                 ?? throw new InvalidOperationException(
                     $"No prerelease versions found for package '{packageId}'.");
         }
 
         // "latest" and "latest-stable" both prefer stable, fall back to any
-        var latestStable = versions.Where(v => !v.Contains('-')).LastOrDefault();
+        var latestStable = versions.Where(v => !v.Contains('-', StringComparison.Ordinal)).LastOrDefault();
 
         if (string.Equals(keyword, "latest-stable", StringComparison.OrdinalIgnoreCase))
         {

@@ -85,10 +85,10 @@ Shows the dependency tree of a package with tree-style output. Use `--depth` (`-
 ### List available versions
 
 ```bash
-nuget-docs versions <Package> [--stable] [--latest] [--limit <n>] [--output json]
+nuget-docs versions <Package> [--stable] [--latest] [--since <ver>] [--limit <n>] [--output json]
 ```
 
-Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to exclude prereleases. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
+Lists all available versions of a package from NuGet.org, newest first. Use `--stable` (`-s`) to exclude prereleases. Use `--latest` to show only the latest stable and latest prerelease versions. Use `--since` to show only versions newer than the specified version. Use `--limit` (`-l`) to control how many to show (default: 20, 0 = all).
 
 ## Efficient Usage Patterns
 
@@ -117,7 +117,7 @@ Lists all available versions of a package from NuGet.org, newest first. Use `--s
 - **Ignore doc changes**: Use `--ignore-docs` with `diff` to skip XML doc comment changes — reduces noise when only code changes matter
 - **CI integration**: `diff` returns exit code 2 when breaking changes are detected (0 = clean, 1 = error)
 - **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
-- **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--latest` for quick lookup of latest stable + prerelease; useful before `diff`
+- **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version; useful before `diff`
 - **JSON output**: Use `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down
@@ -158,6 +158,12 @@ nuget-docs versions Humanizer --stable
 
 # Quick lookup: latest stable + prerelease
 nuget-docs versions Humanizer --latest
+
+# See what's been released since a specific version
+nuget-docs versions Newtonsoft.Json --since 13.0.1
+
+# Combine: stable versions since a specific release
+nuget-docs versions Newtonsoft.Json --since 13.0.1 --stable
 ```
 
 ### Inspecting a specific member

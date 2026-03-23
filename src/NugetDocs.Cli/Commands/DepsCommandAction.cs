@@ -52,7 +52,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         }
     }
 
-    private async Task<DepNode> BuildDependencyTreeAsync(
+    private static async Task<DepNode> BuildDependencyTreeAsync(
         string packageName,
         string version,
         string framework,
@@ -73,7 +73,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         HashSet<string> visited,
         CancellationToken cancellationToken)
     {
-        var key = $"{packageName}@{version}".ToLowerInvariant();
+        var key = $"{packageName}@{version}".ToUpperInvariant();
         var children = new List<DepNode>();
         var deduplicated = false;
 
@@ -205,6 +205,6 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         }
     }
 
-    private record DepEntry(string Id, string Version);
-    private record DepNode(string Id, string Version, List<DepNode> Dependencies, bool Deduplicated = false);
+    private sealed record DepEntry(string Id, string Version);
+    private sealed record DepNode(string Id, string Version, List<DepNode> Dependencies, bool Deduplicated = false);
 }

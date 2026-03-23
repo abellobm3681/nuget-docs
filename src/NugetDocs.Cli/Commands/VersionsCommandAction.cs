@@ -13,14 +13,15 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
         var package = parseResult.GetValue(command.PackageArgument)!;
         var stableOnly = parseResult.GetValue(command.StableOption);
         var latest = parseResult.GetValue(command.LatestOption);
+        var since = parseResult.GetValue(command.SinceOption);
         var limit = parseResult.GetValue(command.LimitOption);
         var output = parseResult.GetValue(command.OutputOption);
 
         try
         {
-            var packageId = package.ToLowerInvariant();
+            var packageId = package.ToUpperInvariant();
             using var http = new HttpClient();
-            var url = $"https://api.nuget.org/v3-flatcontainer/{packageId}/index.json";
+            var url = $"https://api.nuget.org/v3-flatcontainer/{package.ToLowerInvariant()}/index.json";
             var response = await http.GetFromJsonAsync<VersionIndex>(url, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidOperationException($"Could not resolve versions for package '{package}'.");
 
@@ -28,7 +29,20 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
 
             if (stableOnly)
             {
-                versions = versions.Where(v => !v.Contains('-')).ToList();
+                versions = versions.Where(v => !IsPrerelease(v)).ToList();
+            }
+
+            if (since is not null)
+            {
+                var sinceIndex = versions.IndexOf(since);
+                if (sinceIndex >= 0)
+                {
+                    versions = versions.Skip(sinceIndex + 1).ToList();
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Warning: Version '{since}' not found in package history. Showing all versions.");
+                }
             }
 
             // Show newest first
@@ -36,8 +50,8 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
 
             if (latest)
             {
-                var latestStable = versions.FirstOrDefault(v => !v.Contains('-'));
-                var latestPrerelease = versions.FirstOrDefault(v => v.Contains('-'));
+                var latestStable = versions.FirstOrDefault(v => !IsPrerelease(v));
+                var latestPrerelease = versions.FirstOrDefault(IsPrerelease);
                 versions = new[] { latestStable, latestPrerelease }
                     .Where(v => v is not null)
                     .Cast<string>()
@@ -58,8 +72,8 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
                         package,
                         total,
                         stableOnly,
-                        latestStable = versions.FirstOrDefault(v => !v.Contains('-')),
-                        latestPrerelease = versions.FirstOrDefault(v => v.Contains('-')),
+                        latestStable = versions.FirstOrDefault(v => !IsPrerelease(v)),
+                        latestPrerelease = versions.FirstOrDefault(IsPrerelease),
                         versions,
                     }
                     : (object)new
@@ -73,7 +87,11 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
             }
             else
             {
-                var filter = latest ? " (latest)" : stableOnly ? " (stable only)" : "";
+                var parts = new List<string>();
+                if (latest) parts.Add("latest");
+                if (stableOnly) parts.Add("stable only");
+                if (since is not null) parts.Add($"since {since}");
+                var filter = parts.Count > 0 ? $" ({string.Join(", ", parts)})" : "";
                 Console.WriteLine($"// Versions: {package}{filter}");
                 if (!latest)
                 {
@@ -83,8 +101,8 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
 
                 if (latest)
                 {
-                    var latestStable = versions.FirstOrDefault(v => !v.Contains('-'));
-                    var latestPrerelease = versions.FirstOrDefault(v => v.Contains('-'));
+                    var latestStable = versions.FirstOrDefault(v => !IsPrerelease(v));
+                    var latestPrerelease = versions.FirstOrDefault(IsPrerelease);
                     if (latestStable is not null)
                     {
                         Console.WriteLine($"  {latestStable}  (stable)");
@@ -117,6 +135,8 @@ internal sealed class VersionsCommandAction(VersionsCommand command) : Asynchron
             return 1;
         }
     }
+
+    private static bool IsPrerelease(string version) => version.Contains('-', StringComparison.Ordinal);
 
     private sealed class VersionIndex
     {

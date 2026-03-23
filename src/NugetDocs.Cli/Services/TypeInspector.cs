@@ -170,7 +170,7 @@ internal sealed partial class TypeInspector : IDisposable
                 {
                     var prevTrimmed = lines[lookBack].TrimStart();
                     if (prevTrimmed.StartsWith("///", StringComparison.Ordinal) ||
-                        prevTrimmed.StartsWith("[", StringComparison.Ordinal))
+                        prevTrimmed.StartsWith('['))
                     {
                         docLines.Insert(0, lines[lookBack]);
                         lookBack--;
@@ -219,7 +219,7 @@ internal sealed partial class TypeInspector : IDisposable
         if (string.IsNullOrWhiteSpace(trimmedLine) ||
             trimmedLine.StartsWith("///", StringComparison.Ordinal) ||
             trimmedLine.StartsWith("//", StringComparison.Ordinal) ||
-            trimmedLine.StartsWith("[", StringComparison.Ordinal) ||
+            trimmedLine.StartsWith('[') ||
             trimmedLine.StartsWith("using ", StringComparison.Ordinal) ||
             trimmedLine.StartsWith("namespace ", StringComparison.Ordinal) ||
             trimmedLine is "{" or "}" or "")
@@ -258,8 +258,8 @@ internal sealed partial class TypeInspector : IDisposable
         // This prevents matching references in expression bodies
         var declPart = trimmedLine;
         var arrowIdx = declPart.IndexOf("=>", StringComparison.Ordinal);
-        var braceIdx = declPart.IndexOf('{');
-        var parenIdx = declPart.IndexOf('(');
+        var braceIdx = declPart.IndexOf('{', StringComparison.Ordinal);
+        var parenIdx = declPart.IndexOf('(', StringComparison.Ordinal);
 
         var cutoff = declPart.Length;
         if (arrowIdx >= 0 && arrowIdx < cutoff) cutoff = arrowIdx;
@@ -352,16 +352,16 @@ internal sealed partial class TypeInspector : IDisposable
     public string ResolveTypeName(string typeName)
     {
         // If it contains '+' it's already a reflection name for nested types — use as-is
-        if (typeName.Contains('+'))
+        if (typeName.Contains('+', StringComparison.Ordinal))
         {
             return typeName;
         }
 
         // If it looks like a full name already (with or without backtick arity)
-        if (typeName.Contains('.'))
+        if (typeName.Contains('.', StringComparison.Ordinal))
         {
             // If it already has backtick notation, use as-is
-            if (typeName.Contains('`'))
+            if (typeName.Contains('`', StringComparison.Ordinal))
             {
                 return typeName;
             }
@@ -515,7 +515,7 @@ internal sealed partial class TypeInspector : IDisposable
                 {
                     var lastTrimmed = result[^1].TrimStart();
                     if (lastTrimmed.StartsWith("///", StringComparison.Ordinal) ||
-                        lastTrimmed.StartsWith("[", StringComparison.Ordinal) ||
+                        lastTrimmed.StartsWith('[') ||
                         string.IsNullOrWhiteSpace(result[^1]))
                     {
                         result.RemoveAt(result.Count - 1);
@@ -547,7 +547,7 @@ internal sealed partial class TypeInspector : IDisposable
         if (string.IsNullOrWhiteSpace(trimmedLine) ||
             trimmedLine.StartsWith("///", StringComparison.Ordinal) ||
             trimmedLine.StartsWith("//", StringComparison.Ordinal) ||
-            trimmedLine.StartsWith("[", StringComparison.Ordinal) ||
+            trimmedLine.StartsWith('[') ||
             trimmedLine.StartsWith("using ", StringComparison.Ordinal) ||
             trimmedLine.StartsWith("namespace ", StringComparison.Ordinal) ||
             trimmedLine is "{" or "}" or "")
@@ -778,7 +778,7 @@ internal sealed partial class TypeInspector : IDisposable
         var fullName = type.FullName;
 
         // Filter compiler-generated
-        if (name.Contains('<') || name.Contains('>') ||
+        if (name.Contains('<', StringComparison.Ordinal) || name.Contains('>', StringComparison.Ordinal) ||
             name.StartsWith("__", StringComparison.Ordinal) ||
             name == "<Module>" ||
             name == "<PrivateImplementationDetails>")
@@ -789,8 +789,8 @@ internal sealed partial class TypeInspector : IDisposable
         // Filter internal infrastructure namespaces
         if (fullName.StartsWith("Microsoft.Shared.", StringComparison.Ordinal) ||
             fullName.StartsWith("System.Text.RegularExpressions.Generated.", StringComparison.Ordinal) ||
-            fullName.Contains(".DisplayClass") ||
-            fullName.Contains(".DebugView"))
+            fullName.Contains(".DisplayClass", StringComparison.Ordinal) ||
+            fullName.Contains(".DebugView", StringComparison.Ordinal))
         {
             return false;
         }
@@ -847,8 +847,8 @@ internal sealed partial class TypeInspector : IDisposable
     {
         var regexPattern = "^" +
             Regex.Escape(pattern)
-                .Replace("\\*", ".*")
-                .Replace("\\?", ".") +
+                .Replace("\\*", ".*", StringComparison.Ordinal)
+                .Replace("\\?", ".", StringComparison.Ordinal) +
             "$";
 
         return new Regex(regexPattern, RegexOptions.IgnoreCase);
@@ -859,7 +859,7 @@ internal sealed partial class TypeInspector : IDisposable
         _peFile.Dispose();
     }
 
-    public record TypeInfo(
+    internal sealed record TypeInfo(
         string FullName,
         string Name,
         string Namespace,
@@ -868,7 +868,7 @@ internal sealed partial class TypeInspector : IDisposable
         int GenericParameterCount,
         string ReflectionName);
 
-    public record SearchResult(
+    internal sealed record SearchResult(
         string Kind,
         string FullName,
         string Name,
@@ -948,7 +948,7 @@ internal sealed partial class TypeInspector : IDisposable
             // Other generics: format as Name<T1, T2>
             var baseName = FormatSimpleTypeName(genericDef);
             // Strip the backtick arity suffix (e.g., "List`1" → "List")
-            var backtickIdx = baseName.IndexOf('`');
+            var backtickIdx = baseName.IndexOf('`', StringComparison.Ordinal);
             if (backtickIdx >= 0)
             {
                 baseName = baseName[..backtickIdx];
@@ -1005,7 +1005,7 @@ internal sealed partial class TypeInspector : IDisposable
         return string.Join(" ", parts);
     }
 
-    public record MemberSignature(
+    internal sealed record MemberSignature(
         string Name,
         string Kind,
         string Signature);

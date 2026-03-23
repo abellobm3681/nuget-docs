@@ -297,7 +297,7 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             return false;
         if (trimmed.StartsWith("using ", StringComparison.Ordinal))
             return false;
-        if (trimmed.StartsWith("[", StringComparison.Ordinal) && trimmed.EndsWith("]", StringComparison.Ordinal))
+        if (trimmed.StartsWith('[') && trimmed.EndsWith(']'))
             return false;
         if (trimmed is "{" or "}" or "")
             return false;
@@ -508,14 +508,14 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
         }
     }
 
-    private record ChangedType(
+    private sealed record ChangedType(
         TypeInspector.TypeInfo Type,
         string FromSource,
         string ToSource,
         bool IsBreaking,
         MemberChanges? Members);
 
-    private record MemberChanges(
+    private sealed record MemberChanges(
         List<TypeInspector.MemberSignature> Added,
         List<TypeInspector.MemberSignature> Removed,
         List<(TypeInspector.MemberSignature From, TypeInspector.MemberSignature To)> Changed);

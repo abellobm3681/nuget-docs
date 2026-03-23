@@ -20,6 +20,11 @@ internal sealed class VersionsCommand : Command
         Description = "Maximum number of versions to show (default: 20, 0 = all)",
         DefaultValueFactory = _ => 20,
     };
+    public Option<string?> SinceOption { get; } = new("--since")
+    {
+        Description = "Show only versions newer than the specified version",
+        DefaultValueFactory = _ => null,
+    };
     public Option<string?> OutputOption { get; } = CommonOptions.Output;
 
     public VersionsCommand() : base("versions", "List all available versions of a package from NuGet.org")
@@ -27,6 +32,7 @@ internal sealed class VersionsCommand : Command
         Arguments.Add(PackageArgument);
         Options.Add(StableOption);
         Options.Add(LatestOption);
+        Options.Add(SinceOption);
         Options.Add(LimitOption);
         Options.Add(OutputOption);
 
