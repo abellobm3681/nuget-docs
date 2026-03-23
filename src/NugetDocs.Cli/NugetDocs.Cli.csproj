@@ -9,6 +9,10 @@
         <SignAssembly>false</SignAssembly>
     </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="NugetDocs.IntegrationTests" />
+    </ItemGroup>
+
     <PropertyGroup Label="NuGet">
         <PackageId>nuget-docs</PackageId>
         <PackAsTool>true</PackAsTool>

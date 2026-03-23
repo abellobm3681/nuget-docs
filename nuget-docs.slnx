@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="src/NugetDocs.Cli/NugetDocs.Cli.csproj" />
+  <Project Path="src/NugetDocs.IntegrationTests/NugetDocs.IntegrationTests.csproj" />
 </Solution>
