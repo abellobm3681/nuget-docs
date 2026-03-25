@@ -119,7 +119,7 @@ Lists all available versions of a package from NuGet.org, newest first. Use `--s
 - **Dependency tree**: Use `deps <pkg>` to see direct dependencies; `--depth 2` for transitive; shared deps show `(already listed)`
 - **Version listing**: Use `versions <pkg>` to see all versions; `--stable` for stable only; `--prerelease` for prerelease only; `--latest` for quick lookup of latest stable + prerelease; `--since <ver>` to see only versions released after a specific version (supports `latest`, `latest-stable`, `latest-prerelease` keywords); `--count` for just the number; `--deprecated` to show deprecation/vulnerability markers; useful before `diff`
 - **Deprecation check**: Use `--deprecated` with `versions` to see which versions are deprecated or have known vulnerabilities. The `info` command always shows deprecation status automatically
-- **Alternative output formats**: Use `--format table` with `list`, `search`, `versions`, or `deps` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
+- **Alternative output formats**: Use `--format table` with `list`, `search`, `versions`, `deps`, or `diff` for aligned columns, or `--format csv` for CSV output (useful for piping to other tools)
 - **JSON output**: Use `--json` (`-j`) or `--output json` (`-o json`) on any command for structured JSON output
 - **Output is AI-friendly**: Plain text with `///` XML doc comments — compact and informative
 - **For large packages**: Use `search` before `show` to narrow down

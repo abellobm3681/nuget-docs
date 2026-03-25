@@ -46,6 +46,7 @@ internal sealed class DiffCommand : Command
         Description = "Ignore XML doc comment changes in source-level diff, reducing noise from documentation-only updates",
         DefaultValueFactory = _ => false,
     };
+    public Option<string?> FormatOption { get; } = CommonOptions.Format;
     public Option<string?> OutputOption { get; } = CommonOptions.Output;
     public Option<bool> JsonOption { get; } = CommonOptions.Json;
 
@@ -61,6 +62,7 @@ internal sealed class DiffCommand : Command
         Options.Add(IncludeAdditiveOption);
         Options.Add(NoAdditiveOption);
         Options.Add(IgnoreDocsOption);
+        Options.Add(FormatOption);
         Options.Add(OutputOption);
         Options.Add(JsonOption);
 

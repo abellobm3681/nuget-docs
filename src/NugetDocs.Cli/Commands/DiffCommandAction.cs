@@ -20,6 +20,7 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
         var noAdditive = parseResult.GetValue(command.NoAdditiveOption);
         if (noAdditive) includeAdditive = false;
         var ignoreDocs = parseResult.GetValue(command.IgnoreDocsOption);
+        var format = parseResult.GetValue(command.FormatOption);
         var jsonOutput = CommonOptions.IsJsonOutput(parseResult, command.OutputOption, command.JsonOption);
 
         try
@@ -125,6 +126,14 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             if (jsonOutput)
             {
                 OutputJson(package, fromResolved, toResolved, filteredAdded, removed, filteredChanged, typeOnly, breakingOnly, memberDiff);
+            }
+            else if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                OutputCsv(filteredAdded, removed, filteredChanged);
+            }
+            else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
+            {
+                OutputTable(package, fromResolved, toResolved, filteredAdded, removed, filteredChanged);
             }
             else
             {
@@ -303,6 +312,65 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             return false;
 
         return true;
+    }
+
+    private static List<(string Change, string Kind, string FullName, bool Breaking)> BuildFlatRows(
+        List<TypeInspector.TypeInfo> added,
+        List<TypeInspector.TypeInfo> removed,
+        List<ChangedType> changed)
+    {
+        var rows = new List<(string Change, string Kind, string FullName, bool Breaking)>();
+        foreach (var t in added)
+            rows.Add(("Added", t.Kind, t.FullName, false));
+        foreach (var t in removed)
+            rows.Add(("Removed", t.Kind, t.FullName, true));
+        foreach (var c in changed)
+            rows.Add(("Changed", c.Type.Kind, c.Type.FullName, c.IsBreaking));
+        return rows;
+    }
+
+    private static void OutputCsv(
+        List<TypeInspector.TypeInfo> added,
+        List<TypeInspector.TypeInfo> removed,
+        List<ChangedType> changed)
+    {
+        Console.WriteLine("Change,Kind,FullName,Breaking");
+        foreach (var (change, kind, fullName, breaking) in BuildFlatRows(added, removed, changed))
+        {
+            Console.WriteLine($"{change},{CommonOptions.CsvEscape(kind)},{CommonOptions.CsvEscape(fullName)},{(breaking ? "true" : "false")}");
+        }
+    }
+
+    private static void OutputTable(
+        string package,
+        PackageResolver.ResolvedPackage fromResolved,
+        PackageResolver.ResolvedPackage toResolved,
+        List<TypeInspector.TypeInfo> added,
+        List<TypeInspector.TypeInfo> removed,
+        List<ChangedType> changed)
+    {
+        Console.WriteLine($"Diff: {package} {fromResolved.Version} → {toResolved.Version}");
+        Console.WriteLine();
+
+        var rows = BuildFlatRows(added, removed, changed);
+        if (rows.Count == 0)
+        {
+            Console.WriteLine("No public API changes detected.");
+            return;
+        }
+
+        var colChange = Math.Max("Change".Length, rows.Max(r => r.Change.Length));
+        var colKind = Math.Max("Kind".Length, rows.Max(r => r.Kind.Length));
+        var colName = Math.Max("FullName".Length, rows.Max(r => r.FullName.Length));
+
+        Console.WriteLine($"  {"Change".PadRight(colChange)}  {"Kind".PadRight(colKind)}  {"FullName".PadRight(colName)}  Breaking");
+        Console.WriteLine($"  {new string('-', colChange)}  {new string('-', colKind)}  {new string('-', colName)}  --------");
+
+        foreach (var (change, kind, fullName, breaking) in rows)
+        {
+            var breakStr = breaking ? "yes" : "";
+            Console.WriteLine($"  {change.PadRight(colChange)}  {kind.PadRight(colKind)}  {fullName.PadRight(colName)}  {breakStr}");
+        }
     }
 
     private static void OutputJson(

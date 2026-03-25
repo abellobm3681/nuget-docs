@@ -92,4 +92,27 @@ public class DiffCommandTests
         exitCode.Should().Be(0);
         output.Should().Contain("No public API changes detected");
     }
+
+    [TestMethod]
+    public async Task Diff_TableFormat()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "diff", "Newtonsoft.Json", "--from", "13.0.1", "--to", "13.0.3", "--format", "table");
+
+        exitCode.Should().BeOneOf(0, 2);
+        output.Should().Contain("Change");
+        output.Should().Contain("Kind");
+        output.Should().Contain("FullName");
+        output.Should().Contain("---");
+    }
+
+    [TestMethod]
+    public async Task Diff_CsvFormat()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "diff", "Newtonsoft.Json", "--from", "13.0.1", "--to", "13.0.3", "--format", "csv");
+
+        exitCode.Should().BeOneOf(0, 2);
+        output.Should().StartWith("Change,Kind,FullName,Breaking");
+    }
 }

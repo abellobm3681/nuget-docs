@@ -140,7 +140,7 @@ nuget-docs versions Humanizer --format csv              # CSV output
 | `--framework <tfm>` | `-f` | Target framework (auto-detected by default) |
 | `--all` | `-a` | Include internal/private members |
 | `--namespace <prefix>` | `-n` | Filter by namespace prefix |
-| `--format <fmt>` | | Output format for `list`/`search`/`versions`/`deps`: `grouped` (default), `table`, `csv` |
+| `--format <fmt>` | | Output format for `list`/`search`/`versions`/`deps`/`diff`: `grouped` (default), `table`, `csv` |
 | `--deprecated` | | Show deprecation/vulnerability info (for `versions`) |
 | `--json` | `-j` | JSON output (shorthand for `--output json`) |
 | `--output json` | `-o json` | JSON output for programmatic use |
@@ -154,6 +154,7 @@ nuget-docs versions Humanizer --format csv              # CSV output
 - API diff with unified diff, member-level changes, and breaking change detection
 - Version keywords: `latest`, `latest-stable`, `latest-prerelease` work on any `--version`, `--from`, `--to`
 - Dependency tree with transitive resolution and deduplication
+- Meta-package detection: suggests the real package (e.g., `Humanizer` → `Humanizer.Core`); `info` and `deps` work on meta-packages
 - Deprecation and vulnerability detection from NuGet registry
 - Version listing with stable/latest filters
 - Framework-aware: picks best matching TFM (net10.0 > net9.0 > ... > netstandard2.0)
