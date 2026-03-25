@@ -46,4 +46,15 @@ public class DepsCommandTests
         output.Should().Contain("\"Id\"");
         output.Should().Contain("\"Dependencies\"");
     }
+
+    [TestMethod]
+    public async Task Deps_MetaPackage_ShowsDependencies()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "deps", "Humanizer");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Humanizer");
+        output.Should().Contain("Humanizer.Core");
+    }
 }

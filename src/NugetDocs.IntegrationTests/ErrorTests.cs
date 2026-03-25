@@ -92,4 +92,15 @@ public class ErrorTests
         exitCode.Should().Be(1);
         error.Should().Contain("Error:");
     }
+
+    [TestMethod]
+    public async Task List_MetaPackage_SuggestsDependencies()
+    {
+        var (exitCode, _, error) = await CliTestHelper.RunAsync(
+            "list", "Humanizer");
+
+        exitCode.Should().Be(1);
+        error.Should().Contain("meta-package");
+        error.Should().Contain("Try: Humanizer.Core");
+    }
 }

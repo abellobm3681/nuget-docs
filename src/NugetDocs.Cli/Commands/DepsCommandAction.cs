@@ -19,11 +19,11 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
 
         try
         {
-            var resolved = await PackageResolver.ResolveAsync(
-                package, version, framework, cancellationToken).ConfigureAwait(false);
+            var resolved = await PackageResolver.ResolveMetadataOnlyAsync(
+                package, version, cancellationToken).ConfigureAwait(false);
 
             var tree = await BuildDependencyTreeAsync(
-                package, resolved.Version, resolved.Framework, maxDepth, cancellationToken).ConfigureAwait(false);
+                package, resolved.Version, framework, maxDepth, cancellationToken).ConfigureAwait(false);
 
             if (jsonOutput)
             {
@@ -40,7 +40,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
             }
             else if (string.Equals(format, "table", StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine($"Dependencies: {package} {resolved.Version} ({resolved.Framework})");
+                Console.WriteLine($"Dependencies: {package} {resolved.Version} ({resolved.Framework ?? "any"})");
                 Console.WriteLine();
 
                 if (tree.Dependencies.Count == 0)
@@ -71,7 +71,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
             }
             else
             {
-                Console.WriteLine($"// Dependencies: {package} {resolved.Version} ({resolved.Framework})");
+                Console.WriteLine($"// Dependencies: {package} {resolved.Version} ({resolved.Framework ?? "any"})");
                 Console.WriteLine();
 
                 if (tree.Dependencies.Count == 0)
@@ -96,7 +96,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
     private static async Task<DepNode> BuildDependencyTreeAsync(
         string packageName,
         string version,
-        string framework,
+        string? framework,
         int maxDepth,
         CancellationToken cancellationToken)
     {
@@ -108,7 +108,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
     private static async Task<DepNode> ResolveNodeAsync(
         string packageName,
         string version,
-        string framework,
+        string? framework,
         int currentDepth,
         int maxDepth,
         HashSet<string> visited,
@@ -129,10 +129,10 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
             {
                 try
                 {
-                    var resolved = await PackageResolver.ResolveAsync(
-                        packageName, version, framework, cancellationToken).ConfigureAwait(false);
+                    var resolved = await PackageResolver.ResolveMetadataOnlyAsync(
+                        packageName, version, cancellationToken).ConfigureAwait(false);
 
-                    var deps = GetDependenciesFromNuspec(resolved.PackageDir, resolved.Framework);
+                    var deps = GetDependenciesFromNuspec(resolved.PackageDir, framework);
 
                     foreach (var dep in deps)
                     {
@@ -152,7 +152,7 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         return new DepNode(packageName, version, children, deduplicated);
     }
 
-    private static List<DepEntry> GetDependenciesFromNuspec(string packageDir, string framework)
+    private static List<DepEntry> GetDependenciesFromNuspec(string packageDir, string? framework)
     {
         var nuspecFiles = Directory.GetFiles(packageDir, "*.nuspec");
         if (nuspecFiles.Length == 0)
@@ -174,17 +174,22 @@ internal sealed class DepsCommandAction(DepsCommand command) : AsynchronousComma
         var groups = dependencies.Elements(ns + "group").ToList();
         if (groups.Count > 0)
         {
-            // Exact match first
-            var matchGroup = groups.FirstOrDefault(g =>
-                string.Equals(g.Attribute("targetFramework")?.Value, framework, StringComparison.OrdinalIgnoreCase));
+            XElement? matchGroup = null;
 
-            // Fallback: best prefix match (e.g., net10.0 matches .NETCoreApp,Version=v10.0)
-            matchGroup ??= groups.FirstOrDefault(g =>
+            if (framework is not null)
             {
-                var tfm = g.Attribute("targetFramework")?.Value ?? "";
-                return tfm.Contains(framework, StringComparison.OrdinalIgnoreCase) ||
-                       framework.Contains(tfm, StringComparison.OrdinalIgnoreCase);
-            });
+                // Exact match first
+                matchGroup = groups.FirstOrDefault(g =>
+                    string.Equals(g.Attribute("targetFramework")?.Value, framework, StringComparison.OrdinalIgnoreCase));
+
+                // Fallback: best prefix match (e.g., net10.0 matches .NETCoreApp,Version=v10.0)
+                matchGroup ??= groups.FirstOrDefault(g =>
+                {
+                    var tfm = g.Attribute("targetFramework")?.Value ?? "";
+                    return tfm.Contains(framework, StringComparison.OrdinalIgnoreCase) ||
+                           framework.Contains(tfm, StringComparison.OrdinalIgnoreCase);
+                });
+            }
 
             // Fallback: any group
             matchGroup ??= groups.FirstOrDefault();

@@ -22,7 +22,7 @@ internal sealed class ListCommandAction(ListCommand command) : AsynchronousComma
             var resolved = await PackageResolver.ResolveAsync(
                 package, version, framework, cancellationToken).ConfigureAwait(false);
 
-            using var inspector = new TypeInspector(resolved.DllPath, resolved.XmlDocPath);
+            using var inspector = new TypeInspector(resolved.DllPath!, resolved.XmlDocPath);
             var xmlDocs = XmlDocReader.TryLoad(resolved.XmlDocPath);
             var allTypes = inspector.GetTypes(publicOnly: !showAll);
 

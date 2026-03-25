@@ -58,4 +58,47 @@ public class VersionsCommandTests
         exitCode.Should().Be(0);
         output.Should().StartWith("Version,Prerelease");
     }
+
+    [TestMethod]
+    public async Task Versions_SinceFilter()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "versions", "Newtonsoft.Json", "--since", "13.0.1", "--stable");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("since 13.0.1");
+        output.Should().NotContain("13.0.1\n"); // 13.0.1 itself should not be listed
+    }
+
+    [TestMethod]
+    public async Task Versions_CountWithSince()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "versions", "Newtonsoft.Json", "--count", "--since", "13.0.1", "--stable");
+
+        exitCode.Should().Be(0);
+        var trimmed = output.Trim();
+        int.TryParse(trimmed, out var count).Should().BeTrue();
+        count.Should().BeGreaterThan(0);
+    }
+
+    [TestMethod]
+    public async Task Versions_LatestOnly()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "versions", "Humanizer", "--latest");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("latest");
+    }
+
+    [TestMethod]
+    public async Task Versions_JsonOutput()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "versions", "Newtonsoft.Json", "--json", "--limit", "3");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("\"versions\"");
+    }
 }

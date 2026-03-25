@@ -23,7 +23,7 @@ internal sealed class SearchCommandAction(SearchCommand command) : AsynchronousC
             var resolved = await PackageResolver.ResolveAsync(
                 package, version, framework, cancellationToken).ConfigureAwait(false);
 
-            using var inspector = new TypeInspector(resolved.DllPath, resolved.XmlDocPath);
+            using var inspector = new TypeInspector(resolved.DllPath!, resolved.XmlDocPath);
             var allResults = inspector.SearchTypes(pattern, publicOnly: !showAll);
 
             var results = namespaceFilter is not null

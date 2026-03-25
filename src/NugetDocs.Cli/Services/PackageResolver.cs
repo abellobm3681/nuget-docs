@@ -21,8 +21,8 @@ internal sealed class PackageResolver
     internal sealed record ResolvedPackage(
         string PackageId,
         string Version,
-        string Framework,
-        string DllPath,
+        string? Framework,
+        string? DllPath,
         string? XmlDocPath,
         string PackageDir);
 
@@ -62,6 +62,31 @@ internal sealed class PackageResolver
             Framework: framework,
             DllPath: dllPath,
             XmlDocPath: xmlDocPath,
+            PackageDir: packageDir);
+    }
+
+    /// <summary>
+    /// Resolve a package to its directory and version only (no DLL needed).
+    /// Use for commands like info/deps that only read the nuspec.
+    /// </summary>
+    public static async Task<ResolvedPackage> ResolveMetadataOnlyAsync(
+        string packageName,
+        string? requestedVersion,
+        CancellationToken cancellationToken = default)
+    {
+#pragma warning disable CA1308 // NuGet API requires lowercase package names
+        var packageId = packageName.ToLowerInvariant();
+#pragma warning restore CA1308
+
+        var (packageDir, version) = await FindOrDownloadPackageAsync(
+            packageId, packageName, requestedVersion, cancellationToken).ConfigureAwait(false);
+
+        return new ResolvedPackage(
+            PackageId: packageName,
+            Version: version,
+            Framework: null,
+            DllPath: null,
+            XmlDocPath: null,
             PackageDir: packageDir);
     }
 
@@ -253,8 +278,19 @@ internal sealed class PackageResolver
 
         if (candidates.Count == 0)
         {
-            throw new InvalidOperationException(
-                $"No DLLs found in package at '{packageDir}'. Check lib/ and ref/ directories.");
+            // Check if this is a meta-package by reading the nuspec for dependencies
+            var suggestion = GetMetaPackageSuggestion(packageDir);
+            var message = $"No DLLs found in package at '{packageDir}'.";
+            if (suggestion is not null)
+            {
+                message += $" This appears to be a meta-package. Try: {suggestion}";
+            }
+            else
+            {
+                message += " Check lib/ and ref/ directories.";
+            }
+
+            throw new InvalidOperationException(message);
         }
 
         if (requestedFramework is not null)
@@ -354,6 +390,95 @@ internal sealed class PackageResolver
         // "latest" — prefer stable, fall back to prerelease
         return latestStable ?? versions.LastOrDefault()
             ?? throw new InvalidOperationException($"No versions found for package '{packageId}'.");
+    }
+
+    /// <summary>
+    /// Reads the nuspec to suggest dependency packages when no DLLs are found (meta-package).
+    /// </summary>
+    private static string? GetMetaPackageSuggestion(string packageDir)
+    {
+        try
+        {
+            var nuspecFiles = Directory.GetFiles(packageDir, "*.nuspec");
+            if (nuspecFiles.Length == 0) return null;
+
+            var doc = System.Xml.Linq.XDocument.Load(nuspecFiles[0]);
+            var ns = doc.Root?.GetDefaultNamespace() ?? System.Xml.Linq.XNamespace.None;
+            var dependencies = doc.Root?.Element(ns + "metadata")?.Element(ns + "dependencies");
+            if (dependencies is null) return null;
+
+            var packageName = Path.GetFileName(packageDir);
+            var depIds = dependencies.Descendants(ns + "dependency")
+                .Select(d => d.Attribute("id")?.Value)
+                .Where(id => id is not null)
+                .Distinct()
+                // Prioritize short names closest to the package name (e.g., Humanizer.Core before Humanizer.Core.af)
+                .OrderBy(id => id!.Length)
+                .ThenBy(id => id, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (depIds.Count == 0) return null;
+            if (depIds.Count == 1) return depIds[0];
+
+            // Detect common prefix pattern (e.g., Humanizer.Core.af, Humanizer.Core.ar → Humanizer.Core)
+            // If all deps share a common dotted prefix longer than the package name, suggest the prefix
+            var commonPrefix = GetCommonDottedPrefix(depIds!);
+            if (commonPrefix is not null &&
+                commonPrefix.Contains('.', StringComparison.Ordinal) &&
+                !string.Equals(commonPrefix, depIds[0], StringComparison.OrdinalIgnoreCase))
+            {
+                return commonPrefix;
+            }
+
+            // Show up to 3 suggestions
+            var shown = depIds.Take(3).ToList();
+            var result = string.Join(", ", shown);
+            if (depIds.Count > 3) result += $" (and {depIds.Count - 3} more)";
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Finds the longest common dotted prefix among all dependency IDs.
+    /// E.g., ["Humanizer.Core.af", "Humanizer.Core.ar"] → "Humanizer.Core"
+    /// Returns null if no meaningful common prefix exists.
+    /// </summary>
+    private static string? GetCommonDottedPrefix(List<string?> ids)
+    {
+        if (ids.Count == 0 || ids[0] is null) return null;
+
+        var segments = ids[0]!.Split('.');
+        var commonSegmentCount = segments.Length;
+
+        for (var i = 1; i < ids.Count; i++)
+        {
+            if (ids[i] is null) return null;
+            var otherSegments = ids[i]!.Split('.');
+            var maxCommon = Math.Min(commonSegmentCount, otherSegments.Length);
+            var matching = 0;
+            for (var j = 0; j < maxCommon; j++)
+            {
+                if (string.Equals(segments[j], otherSegments[j], StringComparison.OrdinalIgnoreCase))
+                {
+                    matching++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            commonSegmentCount = matching;
+            if (commonSegmentCount == 0) return null;
+        }
+
+        // Need at least 2 segments for a meaningful prefix (e.g., "Package.Core")
+        if (commonSegmentCount < 2) return null;
+
+        return string.Join('.', segments.Take(commonSegmentCount));
     }
 
 #pragma warning disable CA1812 // Instantiated via JSON deserialization

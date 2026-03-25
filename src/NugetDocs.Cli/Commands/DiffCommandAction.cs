@@ -30,8 +30,8 @@ internal sealed class DiffCommandAction(DiffCommand command) : AsynchronousComma
             var toResolved = await PackageResolver.ResolveAsync(
                 package, toVersion, framework, cancellationToken).ConfigureAwait(false);
 
-            using var fromInspector = new TypeInspector(fromResolved.DllPath, fromResolved.XmlDocPath);
-            using var toInspector = new TypeInspector(toResolved.DllPath, toResolved.XmlDocPath);
+            using var fromInspector = new TypeInspector(fromResolved.DllPath!, fromResolved.XmlDocPath);
+            using var toInspector = new TypeInspector(toResolved.DllPath!, toResolved.XmlDocPath);
 
             // Use unique key that includes generic arity to avoid collisions
             static string TypeKey(TypeInspector.TypeInfo t) =>

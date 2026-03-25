@@ -17,8 +17,8 @@ internal sealed class InfoCommandAction(InfoCommand command) : AsynchronousComma
 
         try
         {
-            var resolved = await PackageResolver.ResolveAsync(
-                package, version, requestedFramework: null, cancellationToken).ConfigureAwait(false);
+            var resolved = await PackageResolver.ResolveMetadataOnlyAsync(
+                package, version, cancellationToken).ConfigureAwait(false);
 
             // Find .nuspec file
             var nuspecFiles = Directory.GetFiles(resolved.PackageDir, "*.nuspec");
