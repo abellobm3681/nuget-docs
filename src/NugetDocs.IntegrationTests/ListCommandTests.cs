@@ -104,4 +104,36 @@ public class ListCommandTests
         output.Should().Contain("\"package\"");
         output.Should().Contain("\"types\"");
     }
+
+    [TestMethod]
+    public async Task List_VersionKeyword_LatestPrerelease()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "list", "Humanizer.Core", "--version", "latest-prerelease");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Humanizer.Core");
+    }
+
+    [TestMethod]
+    public async Task List_VersionKeyword_LatestStable()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "list", "Newtonsoft.Json", "--version", "latest-stable");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Newtonsoft.Json");
+        output.Should().Contain("JsonConvert");
+    }
+
+    [TestMethod]
+    public async Task List_VersionKeyword_Latest()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "list", "Newtonsoft.Json", "--version", "latest");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Newtonsoft.Json");
+        output.Should().Contain("JsonConvert");
+    }
 }
