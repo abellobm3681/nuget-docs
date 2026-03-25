@@ -57,4 +57,14 @@ public class InfoCommandTests
         output.Should().Contain("\"id\"");
         output.Should().Contain("\"authors\"");
     }
+
+    [TestMethod]
+    public async Task Info_VersionKeyword_LatestStable()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "info", "Newtonsoft.Json", "--version", "latest-stable");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Newtonsoft.Json");
+    }
 }

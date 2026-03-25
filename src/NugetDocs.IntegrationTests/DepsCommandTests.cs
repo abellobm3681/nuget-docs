@@ -101,4 +101,14 @@ public class DepsCommandTests
         output.Should().Contain("\"Id\"");
         output.Should().Contain("\"Dependencies\"");
     }
+
+    [TestMethod]
+    public async Task Deps_VersionKeyword_LatestStable()
+    {
+        var (exitCode, output, _) = await CliTestHelper.RunAsync(
+            "deps", "Newtonsoft.Json", "--version", "latest-stable");
+
+        exitCode.Should().Be(0);
+        output.Should().Contain("Newtonsoft.Json");
+    }
 }
